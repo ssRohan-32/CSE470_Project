@@ -26,12 +26,6 @@
           <div style="font-size:12px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:4px;">Available Balance</div>
           <div style="font-size:56px; font-weight:800; background:var(--gradient-success); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">
             ৳<%= wallet ? wallet.balance.toFixed(2) : '0.00' %>
-          </div>
-          <div class="mt-16">
-            <div class="badge badge-success" style="font-size:13px; padding:6px 14px;">
-              🎯 1.5× Loyalty Points when paying with wallet!
-            </div>
-          </div>
         </div>
       </div>
 
@@ -52,16 +46,6 @@
             ➕ Add Funds
           </button>
         </form>
-
-        <hr class="divider">
-        <div class="alert alert-info mb-0">
-          <span>🏆</span>
-          <div>
-            <strong>Loyalty Boost Active!</strong><br>
-            You have <strong><%= loyalty.points %></strong> points (<%= loyalty.tier %> Tier).
-            Wallet payments earn <strong>1.5×</strong> more points.
-          </div>
-        </div>
       </div>
     </div>
 
