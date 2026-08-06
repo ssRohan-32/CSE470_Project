@@ -1,0 +1,26 @@
+<%
+/**
+ * views/partials/flash.ejs — Flash messages partial
+ */
+%>
+<% if (success && success.length) { %>
+  <div class="flash-messages">
+    <% success.forEach(msg => { %>
+      <div class="flash flash-success">✅ <%= msg %></div>
+    <% }) %>
+  </div>
+<% } %>
+<% if (error && error.length) { %>
+  <div class="flash-messages">
+    <% error.forEach(msg => { %>
+      <div class="flash flash-error">❌ <%= msg %></div>
+    <% }) %>
+  </div>
+<% } %>
+<% if (info && info.length) { %>
+  <div class="flash-messages">
+    <% info.forEach(msg => { %>
+      <div class="flash flash-info">ℹ️ <%= msg %></div>
+    <% }) %>
+  </div>
+<% } %>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="Find nearby fuel stations with live availability and distance-based routing.">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/home' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🗺️ Find Fuel Stations</h1>
+        <p class="page-subtitle">Feature 1 — Custom Routing & Filtering Service | <span class="pattern-badge">🧮 Haversine Distance Algorithm</span></p>
+      </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="card mb-24">
+      <form method="GET" action="/home" id="filter-form">
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:12px; align-items:end;">
+          <div class="form-group mb-0">
+            <label class="form-label">Fuel Type</label>
+            <select name="fuelType" class="form-control" id="fuelType">
+              <option value="">All Types</option>
+              <% fuelTypes.forEach(f => { %>
+                <option value="<%= f %>" <%= fuelType === f ? 'selected' : '' %>><%= f %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Latitude</label>
+            <input type="number" name="lat" class="form-control" value="<%= userLat %>" step="0.0001" id="lat">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Longitude</label>
+            <input type="number" name="lon" class="form-control" value="<%= userLon %>" step="0.0001" id="lon">
+          </div>
+          <div class="form-group mb-0">
+            <label class="form-label">Max Dist (km)</label>
+            <input type="number" name="maxDist" class="form-control" value="<%= maxDist %>" min="1" max="200">
+          </div>
+          <button type="submit" class="btn btn-primary">🔍 Search</button>
+        </div>
+      </form>
+    </div>
+
+    <% if (pumps.length === 0) { %>
+      <div class="empty-state">
+        <div class="emoji">🏜️</div>
+        <h3>No stations found</h3>
+        <p>Try increasing max distance or changing the fuel type filter.</p>
+      </div>
+    <% } else { %>
+
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+      <span class="text-secondary text-sm"><%= pumps.length %> station(s) found</span>
+      <span class="badge badge-info">Sorted: Fuel Availability → Distance</span>
+    </div>
+
+    <div style="display:grid; gap:16px;">
+      <% pumps.forEach((pump, idx) => { %>
+      <div class="card" style="border-left: 4px solid <%= pump.status === 'active' ? 'var(--accent-success)' : 'var(--accent-danger)' %>;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+              <span style="font-size:20px;">#<%= idx + 1 %></span>
+              <h3 style="font-size:17px;"><%= pump.name %></h3>
+              <span class="badge <%= pump.status === 'active' ? 'badge-success' : 'badge-danger' %>">
+                <span class="pulse-dot" style="background:<%=pump.status==='active'?'var(--accent-success)':'var(--accent-danger)'%>"></span>
+                <%= pump.status %>
+              </span>
+            </div>
+            <p class="text-secondary text-sm">📍 <%= pump.location %></p>
+            <p class="text-sm mt-8">Trust Score: <strong style="color:var(--accent-warning)"><%= pump.trust_score ? pump.trust_score.toFixed(1) : 'N/A' %></strong>/100</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:28px; font-weight:800; color:var(--accent-secondary)"><%= pump.distance %> km</div>
+            <div class="text-muted text-xs">from your location</div>
+          </div>
+        </div>
+
+        <% if (pump.fuelMap && Object.keys(pump.fuelMap).length) { %>
+        <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:10px;">
+          <% Object.entries(pump.fuelMap).forEach(([fuel, qty]) => { %>
+          <div style="background:var(--bg-800); padding:8px 14px; border-radius:8px; min-width:110px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;"><%= fuel %></div>
+            <div class="fuel-bar-wrap">
+              <div class="fuel-bar-fill <%= fuel.toLowerCase() %>" style="width:<%= Math.min(100, qty/100).toFixed(1) %>%"></div>
+            </div>
+            <div style="font-size:12px; margin-top:4px; color:var(--text-secondary);"><%= qty.toFixed(0) %>L</div>
+          </div>
+          <% }) %>
+        </div>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+  </main>
+</div>
+<script src="/js/charts.js"></script>
+</body>
+</html>
