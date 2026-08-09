@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="Live real-time fuel inventory across all active stations.">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/inventory' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">📊 Live Fuel Inventory</h1>
+        <p class="page-subtitle">Feature 2 — Real-time Fuel Inventory Visualizer
+          <span class="pulse-dot"></span> <span class="text-success text-sm">Live</span>
+        </p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="last-update" class="text-muted text-sm">Updating every 30s</span>
+        <button onclick="fetchLiveData()" class="btn btn-ghost btn-sm">🔄 Refresh</button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stat-grid">
+      <% const fuelTypeData = {Octane: {icon:'🔶',color:'octane'}, Diesel:{icon:'⚫',color:'diesel'}, Petrol:{icon:'🟢',color:'petrol'}, EV:{icon:'⚡',color:'ev'}}; %>
+      <% stats.forEach(s => { const ft = fuelTypeData[s.fuel_type] || {icon:'⛽',color:''}; %>
+      <div class="stat-card">
+        <div class="stat-icon"><%= ft.icon %> <%= s.fuel_type %></div>
+        <div class="stat-value fuel-<%= ft.color %>"><%= (s.total_available/1000).toFixed(1) %>k L</div>
+        <div class="stat-label">Available / <%= (s.total_capacity/1000).toFixed(0) %>k capacity</div>
+        <div class="progress-bar-wrap mt-8">
+          <div class="progress-bar-fill" style="width:<%= s.avg_fill_pct %>%; background:var(--gradient-<%= s.avg_fill_pct > 60 ? 'success' : s.avg_fill_pct > 30 ? 'warning' : 'danger' %>)"></div>
+        </div>
+        <div class="text-muted text-xs mt-4"><%= s.avg_fill_pct %>% avg fill</div>
+      </div>
+      <% }) %>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <% if (lowStock.length) { %>
+    <div class="alert alert-warning mb-24">
+      <span>⚠️</span>
+      <div>
+        <strong>Low Stock Alerts:</strong>
+        <%= lowStock.map(l => `${l.pump_name} — ${l.fuel_type} (${l.quantity.toFixed(0)}L)`).join(' · ') %>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Per-Pump Inventory -->
+    <div style="display:grid; gap:20px;">
+      <% Object.entries(byPump).forEach(([pumpId, pumpData]) => { %>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            🏪 <%= pumpData.pump_name %>
+            <span class="badge <%= pumpData.pump_status === 'active' ? 'badge-success' : pumpData.pump_status === 'maintenance' ? 'badge-warning' : 'badge-danger' %>">
+              <%= pumpData.pump_status %>
+            </span>
+          </div>
+          <div class="text-muted text-sm">📍 <%= pumpData.location %></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+          <% pumpData.fuels.forEach(fuel => {
+            const fillPct = (fuel.quantity / fuel.capacity * 100).toFixed(1);
+            const colorClass = fuel.fuel_type.toLowerCase();
+            const icons = {Octane:'🔶',Diesel:'⚫',Petrol:'🟢',EV:'⚡'};
+          %>
+          <div style="background:var(--bg-800); border-radius:10px; padding:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <div style="font-weight:600; font-size:14px;" class="fuel-<%= colorClass %>"><%= icons[fuel.fuel_type] %> <%= fuel.fuel_type %></div>
+              <div class="text-sm text-secondary">৳<%= fuel.price_per_liter.toFixed(2) %>/L</div>
+            </div>
+            <div class="fuel-bar-wrap">
+              <div class="fuel-bar-fill <%= colorClass %>" style="width:<%= fillPct %>%"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:12px;">
+              <span class="text-secondary"><%= fuel.quantity.toFixed(0) %>L</span>
+              <span class="text-muted"><%= fillPct %>%</span>
+              <span class="text-muted">/ <%= fuel.capacity.toFixed(0) %>L</span>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  async function fetchLiveData() {
+    const r = await fetch('/api/inventory');
+    const data = await r.json();
+    document.getElementById('last-update').textContent = 'Updated: ' + new Date(data.timestamp).toLocaleTimeString();
+  }
+  // Auto-refresh every 30 seconds
+  setInterval(fetchLiveData, 30000);
+</script>
+<script src="/js/charts.js"></script>
+</body>
+</html>
