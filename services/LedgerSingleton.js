@@ -1,9 +1,7 @@
 /**
  * services/LedgerSingleton.js
  * SINGLETON PATTERN — Feature 17: Global Transaction Ledger
- *
  * Ensures only ONE instance of the Ledger Manager is active at any time.
- * Prevents race conditions and double-logging of financial transactions.
  */
 
 const LedgerModel = require('../models/LedgerModel');
@@ -31,8 +29,6 @@ class LedgerManager {
 
   /**
    * Immutably logs a financial transaction to the ledger.
-   * @param {Object} entry - transaction_type, reference_id, amount, description, actor_id
-   * @returns {number} The new ledger entry ID
    */
   log(entry) {
     const id = LedgerModel.addEntry(entry);

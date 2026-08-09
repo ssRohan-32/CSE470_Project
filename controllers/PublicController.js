@@ -60,12 +60,18 @@ class PublicController {
 
     const summary = ['Octane', 'Diesel', 'Petrol', 'EV'].map(type => {
       const items = inventory.filter(i => i.fuel_type === type);
+      const totalAvailable = items.reduce((s, i) => s + i.quantity, 0);
+      const totalCapacity  = items.reduce((s, i) => s + i.capacity, 0);
       return {
-        fuel_type: type,
-        total_qty: items.reduce((s, i) => s + i.quantity, 0),
+        fuel_type:      type,
+        total_available: totalAvailable,
+        total_capacity:  totalCapacity,
+        avg_fill_pct:    totalCapacity > 0
+          ? ((totalAvailable / totalCapacity) * 100).toFixed(1)
+          : '0.0',
         avg_price: items.length
           ? (items.reduce((s, i) => s + i.price_per_liter, 0) / items.length).toFixed(2)
-          : 0,
+          : '0.00',
         pump_count: items.length
       };
     });

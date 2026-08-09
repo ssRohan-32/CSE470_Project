@@ -5,15 +5,15 @@
  * Feature 5 — Digital Wallet: deposit money, view balance & transactions
  */
 
-const WalletModel  = require('../models/WalletModel');
+const WalletModel = require('../models/WalletModel');
 const LedgerManager = require('../services/LedgerSingleton');
 
 class CustomerController {
 
-  /** Feature 5: Digital Wallet — Show balance & transaction history */
+  /** Feature 5: Digital Wallet*/
   static showWallet(req, res) {
-    const userId       = req.session.user.id;
-    const wallet       = WalletModel.getByUserId(userId) || { balance: 0 };
+    const userId = req.session.user.id;
+    const wallet = WalletModel.getByUserId(userId) || { balance: 0 };
     const transactions = WalletModel.getTransactions(userId, 20);
 
     res.render('customer/wallet', {

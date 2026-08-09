@@ -2,11 +2,11 @@
  * controllers/PumpController.js
  * NAFAS Module 1
  *
- * Feature 13 — Maintenance Mode: toggle station status on/off
+ * Feature 13 — Maintenance Mode: toggle on/off
  */
 
 const LedgerManager = require('../services/LedgerSingleton');
-const { getDb }     = require('../config/database');
+const { getDb } = require('../config/database');
 
 class PumpController {
 
@@ -14,7 +14,7 @@ class PumpController {
     return getDb().prepare('SELECT * FROM pumps WHERE owner_id = ?').all(ownerId);
   }
 
-  /** Pump dashboard — landing page */
+  /** Pump dashboard */
   static showDashboard(req, res) {
     const pumps = PumpController.getPumps(req.session.user.id);
     res.render('pump/dashboard', {
@@ -24,7 +24,7 @@ class PumpController {
     });
   }
 
-  /** Feature 13: Show uptime/status control */
+  /** Feature 13: Toggle Maintenance Mode */
   static showUptime(req, res) {
     const pumps = PumpController.getPumps(req.session.user.id);
     res.render('pump/uptime', {
@@ -34,7 +34,6 @@ class PumpController {
     });
   }
 
-  /** Feature 13: Toggle Maintenance Mode */
   static toggleStatus(req, res) {
     const { pumpId, status } = req.body;
     const pump = getDb()

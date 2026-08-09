@@ -1,6 +1,5 @@
 /**
  * models/LedgerModel.js
- * Handles immutable transaction ledger records
  * Used by: Feature 17 (Global Transaction Ledger - Singleton Pattern)
  */
 
