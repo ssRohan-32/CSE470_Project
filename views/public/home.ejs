@@ -60,43 +60,66 @@
 
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
       <span class="text-secondary text-sm"><%= pumps.length %> station(s) found</span>
-      <span class="badge badge-info">Sorted: Fuel Availability → Distance</span>
+      <% if (userLat && userLng) { %>
+      <span class="badge badge-info">🧮 Sorted by Distance</span>
+      <% } else { %>
+      <span class="badge badge-info">Showing All Stations</span>
+      <% } %>
     </div>
 
     <div style="display:grid; gap:16px;">
       <% pumps.forEach((pump, idx) => { %>
-      <div class="card" style="border-left: 4px solid <%= pump.status === 'active' ? 'var(--accent-success)' : 'var(--accent-danger)' %>;">
+      <%
+        const isMaintenance = pump.status === 'maintenance';
+        const isInactive    = pump.status === 'inactive';
+        const borderColor   = isMaintenance ? 'var(--accent-warning)' : isInactive ? 'var(--accent-danger)' : 'var(--accent-success)';
+        const badgeClass    = isMaintenance ? 'badge-warning' : isInactive ? 'badge-danger' : 'badge-success';
+        const dotColor      = isMaintenance ? 'var(--accent-warning)' : isInactive ? 'var(--accent-danger)' : 'var(--accent-success)';
+        const statusLabel   = isMaintenance ? '🔧 Maintenance' : isInactive ? '❌ Inactive' : '✅ Active';
+      %>
+      <div class="card" style="border-left: 4px solid <%= borderColor %>;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
           <div>
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-              <span style="font-size:20px;">#<%= idx + 1 %></span>
+              <span style="font-size:18px; font-weight:700; color:var(--text-muted);">#<%= idx + 1 %></span>
               <h3 style="font-size:17px;"><%= pump.name %></h3>
-              <span class="badge <%= pump.status === 'active' ? 'badge-success' : 'badge-danger' %>">
-                <span class="pulse-dot" style="background:<%=pump.status==='active'?'var(--accent-success)':'var(--accent-danger)'%>"></span>
-                <%= pump.status %>
+              <span class="badge <%= badgeClass %>">
+                <span class="pulse-dot" style="background:<%= dotColor %>"></span>
+                <%= statusLabel %>
               </span>
             </div>
             <p class="text-secondary text-sm">📍 <%= pump.location %></p>
-            <p class="text-sm mt-8">Trust Score: <strong style="color:var(--accent-warning)"><%= pump.trust_score ? pump.trust_score.toFixed(1) : 'N/A' %></strong>/100</p>
+            <% if (isMaintenance) { %>
+            <p class="text-sm mt-8" style="color:var(--accent-warning);">⚠️ This station is temporarily under maintenance. Fuel availability shown for reference.</p>
+            <% } %>
           </div>
+          <% if (pump.distance !== undefined) { %>
           <div style="text-align:right;">
-            <div style="font-size:28px; font-weight:800; color:var(--accent-secondary)"><%= pump.distance %> km</div>
+            <div style="font-size:28px; font-weight:800; color:var(--accent-secondary);"><%= pump.distance.toFixed(1) %> km</div>
             <div class="text-muted text-xs">from your location</div>
           </div>
+          <% } %>
         </div>
 
-        <% if (pump.fuelMap && Object.keys(pump.fuelMap).length) { %>
+        <% if (pump.inventory && pump.inventory.length) { %>
         <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:10px;">
-          <% Object.entries(pump.fuelMap).forEach(([fuel, qty]) => { %>
-          <div style="background:var(--bg-800); padding:8px 14px; border-radius:8px; min-width:110px;">
-            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;"><%= fuel %></div>
-            <div class="fuel-bar-wrap">
-              <div class="fuel-bar-fill <%= fuel.toLowerCase() %>" style="width:<%= Math.min(100, qty/100).toFixed(1) %>%"></div>
+          <% pump.inventory.forEach(fuel => {
+            const fillPct = fuel.capacity > 0 ? Math.min(100, (fuel.quantity / fuel.capacity) * 100) : 0;
+            const icons = { Octane:'🔶', Diesel:'⚫', Petrol:'🟢', EV:'⚡' };
+            const icon  = icons[fuel.fuel_type] || '⛽';
+            const stockColor = fillPct > 50 ? 'var(--accent-success)' : fillPct > 20 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+          %>
+          <div style="background:var(--bg-800); padding:10px 14px; border-radius:8px; min-width:120px;">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><%= icon %> <%= fuel.fuel_type %></div>
+            <div style="background:var(--bg-700); border-radius:4px; height:6px; margin-bottom:4px;">
+              <div style="width:<%= fillPct.toFixed(1) %>%; height:100%; background:<%= stockColor %>; border-radius:4px; transition:width 0.3s;"></div>
             </div>
-            <div style="font-size:12px; margin-top:4px; color:var(--text-secondary);"><%= qty.toFixed(0) %>L</div>
+            <div style="font-size:12px; color:var(--text-secondary);"><%= fuel.quantity.toFixed(0) %>L &nbsp;·&nbsp; ৳<%= fuel.price_per_liter ? fuel.price_per_liter.toFixed(2) : '—' %>/L</div>
           </div>
           <% }) %>
         </div>
+        <% } else { %>
+        <p class="text-muted text-sm mt-16">No fuel inventory data available.</p>
         <% } %>
       </div>
       <% }) %>

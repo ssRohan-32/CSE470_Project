@@ -6,9 +6,9 @@
  * Feature 2 — Real-time fuel inventory with icons
  */
 
-const FuelModel      = require('../models/FuelModel');
+const FuelModel = require('../models/FuelModel');
 const RoutingService = require('../services/RoutingService');
-const { getDb }      = require('../config/database');
+const { getDb } = require('../config/database');
 
 class PublicController {
 
@@ -16,23 +16,21 @@ class PublicController {
   static showHome(req, res) {
     const { fuelType, lat, lng, maxDist } = req.query;
 
+    // Show ALL stations — maintenance status is shown as a badge, not hidden
     let pumps = FuelModel.getPumpsWithInventory();
 
-    // Filter out maintenance pumps (Feature 13 integration)
-    pumps = pumps.filter(p => p.status !== 'maintenance');
-
-    // Filter by requested fuel type
+    // Filter by fuel type if selected (match stations that carry this fuel)
     if (fuelType) {
       pumps = pumps.filter(p =>
-        p.inventory && p.inventory.some(i => i.fuel_type === fuelType && i.quantity > 0)
+        p.inventory && p.inventory.some(i => i.fuel_type === fuelType)
       );
     }
 
     // Sort by distance if coordinates provided (Haversine algorithm)
     if (lat && lng) {
       const userLat = parseFloat(lat);
-      const userLng = parseFloat(lng);
-      const dist    = parseFloat(maxDist) || 50;
+      const userLng  = parseFloat(lng);
+      const dist     = parseFloat(maxDist) || 50;
 
       pumps = pumps
         .map(p => ({
@@ -58,14 +56,14 @@ class PublicController {
   /** Feature 2: Real-Time Fuel Inventory Dashboard */
   static showInventory(req, res) {
     const inventory = FuelModel.getAllInventory();
-    const pumps     = getDb().prepare('SELECT * FROM pumps ORDER BY name').all();
+    const pumps = getDb().prepare('SELECT * FROM pumps ORDER BY name').all();
 
     const summary = ['Octane', 'Diesel', 'Petrol', 'EV'].map(type => {
       const items = inventory.filter(i => i.fuel_type === type);
       return {
         fuel_type: type,
-        total_qty:  items.reduce((s, i) => s + i.quantity, 0),
-        avg_price:  items.length
+        total_qty: items.reduce((s, i) => s + i.quantity, 0),
+        avg_price: items.length
           ? (items.reduce((s, i) => s + i.price_per_liter, 0) / items.length).toFixed(2)
           : 0,
         pump_count: items.length
@@ -78,8 +76,8 @@ class PublicController {
       if (!byPump[row.pump_id]) {
         byPump[row.pump_id] = {
           pump_name: row.pump_name,
-          location:  row.location,
-          status:    row.pump_status,
+          location: row.location,
+          status: row.pump_status,
           fuels: []
         };
       }

@@ -27,15 +27,22 @@ class FuelModel {
     `).all(pumpId);
   }
 
-  /** Used by Feature 1: get all pumps with their available fuels */
+  // Feature 1: get all pumps with their full inventory (all fuel types)
   static getPumpsWithInventory() {
     const pumps = getDb().prepare('SELECT * FROM pumps ORDER BY name').all();
-    return pumps.map(p => ({
-      ...p,
-      inventory: getDb().prepare(
-        'SELECT * FROM fuel_inventory WHERE pump_id = ? AND quantity > 0'
-      ).all(p.id)
-    }));
+    return pumps.map(p => {
+      const inventory = getDb().prepare(
+        'SELECT * FROM fuel_inventory WHERE pump_id = ?'
+      ).all(p.id);
+
+      // Build fuelMap { 'Octane': 2500, 'Diesel': 1800 } for the view
+      const fuelMap = {};
+      for (const i of inventory) {
+        fuelMap[i.fuel_type] = i.quantity;
+      }
+
+      return { ...p, inventory, fuelMap };
+    });
   }
 
   static getActivePumpsWithFuel(fuelType = null) {
