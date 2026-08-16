@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/customer/payment' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">⛽ Buy Fuel</h1>
+        <p class="page-subtitle">Feature 6 — Software Payment Gateway Integration
+          <span class="pattern-badge">🔌 Adapter Pattern</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">🛒 Purchase Fuel</h3>
+        </div>
+
+        <form action="/customer/payment" method="POST" id="paymentForm">
+          <div class="form-group">
+            <label class="form-label">Select Station</label>
+            <select name="pump_id" class="form-control" required id="pump-select">
+              <option value="">-- Choose a Station --</option>
+              <% pumps.forEach(p => { %>
+              <option value="<%= p.id %>"><%= p.name %> — <%= p.location %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fuel Type</label>
+            <select name="fuel_type" class="form-control" required id="fuel-select">
+              <option value="Petrol">🟢 Petrol</option>
+              <option value="Octane">🔶 Octane</option>
+              <option value="Diesel">⚫ Diesel</option>
+              <option value="EV">⚡ EV Charge</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Quantity (Litres)</label>
+            <input type="number" name="quantity" class="form-control" min="1" max="200" step="0.1" value="20" required id="qty-input" oninput="updatePreview()">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pricing Strategy</label>
+            <select name="pricing_strategy" class="form-control" onchange="updatePreview()" id="strategy-select">
+              <% strategies.forEach(s => { %><option value="<%= s %>"><%= s %> Pricing</option><% }) %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:10px;">
+              <% methods.forEach(m => { %>
+              <label style="cursor:pointer;">
+                <input type="radio" name="payment_method" value="<%= m.id %>" <%= m.id === 'wallet' ? 'checked' : '' %> style="display:none;" class="payment-radio">
+                <div class="payment-method-card" id="method-<%= m.id %>" style="border:2px solid <%= m.id === 'wallet' ? 'var(--accent-primary)' : 'var(--border-color)' %>; border-radius:10px; padding:14px; text-align:center; transition:all 0.2s;">
+                  <div style="font-size:24px;"><%= m.icon %></div>
+                  <div style="font-size:12px; font-weight:600; margin-top:4px;"><%= m.name %></div>
+                </div>
+              </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <div class="alert alert-info mb-16" id="wallet-note">
+            💳 Wallet Balance: <strong>৳<%= wallet ? wallet.balance.toFixed(2) : '0.00' %></strong>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full btn-lg" style="justify-content:center;">
+            💰 Confirm Purchase
+          </button>
+        </form>
+      </div>
+
+      <!-- Adapter Pattern Info + Price Preview -->
+      <div>
+        <div class="card mb-16">
+          <div class="card-header"><h3 class="card-title">💡 Adapter Pattern in Action</h3></div>
+          <p class="text-secondary text-sm mb-16">All payment APIs are unified through a single adapter interface:</p>
+          <div style="background:var(--bg-800); border-radius:8px; padding:16px; font-family:monospace; font-size:12px; color:var(--accent-success); line-height:2;">
+            PaymentAdapter.processPayment(method, details)<br>
+            <span style="color:var(--text-muted);">├─ BkashAPI.sendPayment() → standardized</span><br>
+            <span style="color:var(--text-muted);">├─ BankAPI.initiateTransfer() → standardized</span><br>
+            <span style="color:var(--text-muted);">└─ WalletAPI.deductBalance() → standardized</span>
+          </div>
+        </div>
+
+        <div class="card" id="price-preview">
+          <div class="card-header"><h3 class="card-title">🧮 Live Price Calculator</h3></div>
+          <div id="preview-content" style="text-align:center; color:var(--text-muted); padding:20px;">
+            Select a station and quantity to see price breakdown.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Highlight selected payment method card
+  document.querySelectorAll('.payment-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.payment-method-card').forEach(c => {
+        c.style.borderColor = 'var(--border-color)';
+      });
+      document.getElementById('method-' + radio.value).style.borderColor = 'var(--accent-primary)';
+      const note = document.getElementById('wallet-note');
+      if (note) {
+        note.style.display = radio.value === 'wallet' ? 'flex' : 'none';
+      }
+    });
+  });
+
+  async function updatePreview() {
+    const qty = parseFloat(document.getElementById('qty-input').value) || 0;
+    const strategy = document.getElementById('strategy-select').value;
+    const fuelPrices = { Octane:1.35, Diesel:1.10, Petrol:1.20, EV:0.45 };
+    const fuelType = document.getElementById('fuel-select').value;
+    const basePrice = fuelPrices[fuelType] || 1.20;
+    const multipliers = { Standard:1.0, Holiday:1.12, Surge:1.25 };
+    const taxRate = 0.15;
+    const mult = multipliers[strategy] || 1;
+    const adjusted = basePrice * mult;
+    const subtotal = adjusted * qty;
+    const tax = subtotal * taxRate;
+    const total = subtotal + tax + (strategy === 'Surge' ? subtotal * 0.03 : 0);
+
+    document.getElementById('preview-content').innerHTML = `
+      <div style="text-align:left;">
+        <div class="flex-between mb-8"><span class="text-muted">Base Price</span><span>৳${basePrice.toFixed(2)}/L</span></div>
+        <div class="flex-between mb-8"><span class="text-muted">Strategy</span><span class="badge badge-purple">${strategy}</span></div>
+        <div class="flex-between mb-8"><span class="text-muted">Adjusted Price</span><span>৳${adjusted.toFixed(4)}/L × ${qty}L</span></div>
+        <div class="flex-between mb-8"><span class="text-muted">Subtotal</span><span>৳${subtotal.toFixed(2)}</span></div>
+        <div class="flex-between mb-8"><span class="text-muted">Tax (15%)</span><span>৳${tax.toFixed(2)}</span></div>
+        ${strategy === 'Surge' ? `<div class="flex-between mb-8"><span class="text-muted">Surge Fee (3%)</span><span>৳${(subtotal*0.03).toFixed(2)}</span></div>` : ''}
+        <hr class="divider">
+        <div class="flex-between"><span class="font-bold">Total</span><span class="font-bold text-success" style="font-size:20px;">৳${total.toFixed(2)}</span></div>
+      </div>
+    `;
+  }
+
+  updatePreview();
+  document.getElementById('fuel-select').addEventListener('change', updatePreview);
+</script>
+</body>
+</html>

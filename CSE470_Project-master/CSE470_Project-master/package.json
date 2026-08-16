@@ -1,20 +1,21 @@
 {
-  "name": "nafas-module-1",
-  "version": "1.0.0",
-  "description": "NAFAS Module 1 — Ledger, Routing, Fuel Inventory, Maintenance Mode, Digital Wallet",
+  "name": "nafas-fuel-station",
+  "version": "2.0.0",
+  "description": "NAFAS Fuel Station Management System — Module 1 + Module 2",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
     "connect-flash": "^0.1.1",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "method-override": "^3.0.0"
+    "method-override": "^3.0.0",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.3"
