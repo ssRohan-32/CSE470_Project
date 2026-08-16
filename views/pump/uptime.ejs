@@ -42,6 +42,10 @@
               </span>
             </div>
             <p class="text-secondary text-sm">📍 <%= pump.location %></p>
+            <p class="text-muted text-sm mt-4">
+              Trust Score: <strong class="text-warning"><%= pump.trust_score.toFixed(1) %>/100</strong>
+              &nbsp;|&nbsp; Operational Days: <strong class="text-info"><%= pump.operational_days %></strong>
+            </p>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <% if (pump.status !== 'active') { %>
@@ -69,6 +73,14 @@
         </div>
 
         <div style="margin-top:16px; display:flex; gap:16px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:160px;">
+            <div class="text-muted text-xs mb-4">Trust Score</div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill <%= pump.trust_score>75?'success':pump.trust_score>50?'warning':'danger' %>"
+                   style="width:<%= pump.trust_score %>%"></div>
+            </div>
+            <div class="text-sm mt-4"><%= pump.trust_score.toFixed(1) %>/100</div>
+          </div>
           <div style="background:var(--bg-800); padding:10px 16px; border-radius:8px; text-align:center;">
             <div class="text-muted text-xs">Effect on Routing</div>
             <div class="font-semibold text-sm mt-4 <%= pump.status==='active'?'text-success':'text-danger' %>">

@@ -1,36 +1,35 @@
 /**
  * controllers/AdminController.js
- * NAFAS Module 1
- *
- * Feature 17 — Centralized Transaction Ledger [Singleton Pattern]
+ * Module 1: Feature 17 — Global Transaction Ledger [Singleton Pattern]
  */
 
 const LedgerManager = require('../services/LedgerSingleton');
+const { getDb }      = require('../config/database');
 
 class AdminController {
 
-
+  /** Feature 17: Global Transaction Ledger */
   static showLedger(req, res) {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 20;
-    const offset = (page - 1) * limit;
-    const typeFilter = req.query.type || null;
+    const ledgerInstance = LedgerManager.getInstance();
+    const typeFilter     = req.query.type || null;
+    const page           = parseInt(req.query.page) || 1;
+    const limit          = 25;
+    const offset         = (page - 1) * limit;
 
-    const ledger = LedgerManager.getInstance();
-    const entries = ledger.getAll({ limit, offset, type: typeFilter });
-    const stats = ledger.getStats();
-    const total = ledger.getTotalCount();
-    const totalPages = Math.ceil(total / limit);
-    const instanceId = ledger.getInstanceId();
+    const entries    = ledgerInstance.getAll({ limit, offset, type: typeFilter });
+    const stats      = ledgerInstance.getStats();
+    const total      = ledgerInstance.getTotalCount();
+    const totalPages = Math.ceil(total / limit) || 1;
+    const instanceId = ledgerInstance.getInstanceId();
 
     res.render('admin/ledger', {
-      title: 'Transaction Ledger — NAFAS Module 1',
+      title: 'Transaction Ledger — NAFAS',
       entries,
       stats,
       total,
+      typeFilter: typeFilter || '',
       page,
       totalPages,
-      typeFilter,
       instanceId,
       user: req.session.user
     });

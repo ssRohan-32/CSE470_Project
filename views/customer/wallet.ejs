@@ -14,18 +14,22 @@
     <div class="topbar">
       <div>
         <h1 class="page-title">💳 Digital Wallet</h1>
-        <p class="page-subtitle">Feature 5 — Integrated Digital Wallet with Loyalty Multiplier</p>
+        <p class="page-subtitle">Feature 5 — Integrated Digital Wallet (Module 1)</p>
       </div>
     </div>
 
     <div class="grid-2 mb-24">
-      <!-- Wallet Card -->
+      <!-- Wallet Balance Card -->
       <div class="card" style="background:linear-gradient(135deg, rgba(0,229,160,0.15), rgba(0,212,255,0.1)); border-color:var(--accent-success);">
         <div style="text-align:center; padding:16px 0;">
           <div style="font-size:40px; margin-bottom:12px;">💳</div>
           <div style="font-size:12px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:4px;">Available Balance</div>
           <div style="font-size:56px; font-weight:800; background:var(--gradient-success); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">
             ৳<%= wallet ? wallet.balance.toFixed(2) : '0.00' %>
+          </div>
+          <div class="mt-16">
+            <a href="/customer/payment" class="btn btn-success" style="justify-content:center;">⛽ Buy Fuel with Wallet</a>
+          </div>
         </div>
       </div>
 
@@ -62,7 +66,7 @@
           </thead>
           <tbody>
             <% if (!transactions.length) { %>
-            <tr><td colspan="4" style="text-align:center; padding:32px; color:var(--text-muted);">No transactions yet.</td></tr>
+            <tr><td colspan="4" style="text-align:center; padding:32px; color:var(--text-muted);">No transactions yet. Top up to get started!</td></tr>
             <% } %>
             <% transactions.forEach(t => { %>
             <tr>

@@ -1,5 +1,6 @@
 /**
  * models/WalletModel.js
+ * Handles digital wallet operations
  * Used by: Feature 5 (Integrated Digital Wallet)
  */
 

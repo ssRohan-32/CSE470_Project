@@ -1,21 +1,20 @@
 /**
  * controllers/AuthController.js
- * NAFAS Module 1 — Login, Logout, Registration
+ * Handles login, logout, registration
  */
 
 const UserModel   = require('../models/UserModel');
 const WalletModel = require('../models/WalletModel');
 
 class AuthController {
-
   static showLogin(req, res) {
     if (req.session.user) return res.redirect(AuthController.getDashboardUrl(req.session.user.role));
-    res.render('auth/login', { title: 'Login — NAFAS Module 1' });
+    res.render('auth/login', { title: 'Login — NAFAS' });
   }
 
   static showRegister(req, res) {
     if (req.session.user) return res.redirect(AuthController.getDashboardUrl(req.session.user.role));
-    res.render('auth/register', { title: 'Register — NAFAS Module 1' });
+    res.render('auth/register', { title: 'Register — NAFAS' });
   }
 
   static async login(req, res) {
@@ -43,17 +42,9 @@ class AuthController {
         req.flash('error', 'Email already registered.');
         return res.redirect('/register');
       }
-
-      // Module 1 only supports: customer, pump_owner, superadmin
-      const allowedRoles = ['customer', 'pump_owner', 'superadmin'];
-      if (!allowedRoles.includes(role)) {
-        req.flash('error', 'Invalid role for Module 1.');
-        return res.redirect('/register');
-      }
-
       const userId = UserModel.create({ name, email, password, role, phone });
 
-      // Auto-create wallet for customers (Feature 5)
+      // Auto-create wallet for customers
       if (role === 'customer') {
         WalletModel.createWallet(userId);
       }
@@ -67,15 +58,17 @@ class AuthController {
   }
 
   static logout(req, res) {
-    req.session.destroy(() => res.redirect('/login'));
+    req.session.destroy(() => {
+      res.redirect('/login');
+    });
   }
 
-  /** Redirect to correct Module 1 landing page after login */
   static getDashboardUrl(role) {
     const map = {
-      customer:   '/customer/wallet',
-      pump_owner: '/pump/dashboard',
-      superadmin: '/admin/ledger',
+      customer:        '/customer/wallet',
+      pump_owner:      '/pump/dashboard',
+      refinery_owner:  '/refinery/dashboard',
+      superadmin:      '/admin/ledger',
     };
     return map[role] || '/home';
   }
