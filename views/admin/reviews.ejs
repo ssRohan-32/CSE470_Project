@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/reviews' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">⚖️ Review Triage</h1>
+        <p class="page-subtitle">Feature 13 — Superadmin review queue with auto keyword-based priority</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-3 mb-24">
+      <% const high   = stats.find(s => s.priority === 'High')   || { count:0 }; %>
+      <% const medium = stats.find(s => s.priority === 'Medium') || { count:0 }; %>
+      <% const low    = stats.find(s => s.priority === 'Low')    || { count:0 }; %>
+      <div class="stat-card">
+        <div class="stat-label">🔴 High Priority</div>
+        <div class="stat-value" style="color:var(--accent-danger);"><%= high.count %></div>
+        <div class="stat-note">Auto-flagged by keywords</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🟡 Medium Priority</div>
+        <div class="stat-value" style="color:var(--accent-warning);"><%= medium.count %></div>
+        <div class="stat-note">Moderate complaints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🟢 Low Priority</div>
+        <div class="stat-value" style="color:var(--accent-success);"><%= low.count %></div>
+        <div class="stat-note">General feedback</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-24">
+      <form method="GET" action="/admin/reviews" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div class="form-group mb-0">
+          <label class="form-label">Priority</label>
+          <select name="priority" class="form-control">
+            <option value="">All Priorities</option>
+            <option value="High"   <%= filter.priority==='High'   ? 'selected':'' %>>High</option>
+            <option value="Medium" <%= filter.priority==='Medium' ? 'selected':'' %>>Medium</option>
+            <option value="Low"    <%= filter.priority==='Low'    ? 'selected':'' %>>Low</option>
+          </select>
+        </div>
+        <div class="form-group mb-0">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-control">
+            <option value="">All Statuses</option>
+            <option value="pending"  <%= filter.status==='pending'  ? 'selected':'' %>>Pending</option>
+            <option value="reviewed" <%= filter.status==='reviewed' ? 'selected':'' %>>Reviewed</option>
+            <option value="actioned" <%= filter.status==='actioned' ? 'selected':'' %>>Actioned</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        <a href="/admin/reviews" class="btn btn-ghost">Clear</a>
+      </form>
+    </div>
+
+    <!-- Reviews Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">All Reviews</h3>
+        <span class="badge badge-muted"><%= reviews.length %> results</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Priority</th>
+              <th>Target</th>
+              <th>Type</th>
+              <th>Rating</th>
+              <th>Comment (Anonymous)</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!reviews.length) { %>
+            <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted);">No reviews yet.</td></tr>
+            <% } %>
+            <% reviews.forEach(r => { %>
+            <tr>
+              <td class="text-muted text-sm">#<%= r.id %></td>
+              <td>
+                <% const bc = r.priority==='High' ? 'danger' : r.priority==='Medium' ? 'warning' : 'success'; %>
+                <span class="badge badge-<%= bc %>"><%= r.priority %></span>
+              </td>
+              <td class="font-semibold text-sm"><%= r.target_name || `#${r.target_id}` %></td>
+              <td><span class="badge badge-muted"><%= r.review_type %></span></td>
+              <td class="font-bold"><%= '⭐'.repeat(r.rating) %></td>
+              <td class="text-sm" style="max-width:260px; white-space:pre-wrap; word-break:break-word;"><%= r.comment %></td>
+              <td>
+                <% const sc = r.status==='actioned' ? 'success' : r.status==='reviewed' ? 'info' : 'muted'; %>
+                <span class="badge badge-<%= sc %>"><%= r.status || 'pending' %></span>
+              </td>
+              <td class="text-muted text-sm"><%= new Date(r.created_at).toLocaleDateString() %></td>
+              <td>
+                <form action="/admin/reviews/status" method="POST" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <input type="hidden" name="reviewId" value="<%= r.id %>">
+                  <select name="status" class="form-control" style="padding:4px 8px; font-size:12px; width:auto;">
+                    <option value="pending">Pending</option>
+                    <option value="reviewed">Reviewed</option>
+                    <option value="actioned">Actioned</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm">✓</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

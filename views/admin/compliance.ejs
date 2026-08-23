@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/compliance' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🎫 Investigation Orders</h1>
+        <p class="page-subtitle">Feature 15 — Auto-generated when trust score drops below threshold (F14 Cron) or 3+ negative reviews (F12 Observer)</p>
+      </div>
+      <!-- Manual Cron Trigger -->
+      <form action="/admin/compliance/run" method="POST">
+        <button type="submit" class="btn btn-warning" style="gap:8px;" onclick="return confirm('Run daily compliance check manually?')">
+          ▶️ Run Compliance Check
+        </button>
+      </form>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-4 mb-24" style="--cols:4;">
+      <div class="stat-card">
+        <div class="stat-label">📋 Open</div>
+        <div class="stat-value" style="color:var(--accent-warning);"><%= stats.open %></div>
+        <div class="stat-note">Awaiting action</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔍 Investigating</div>
+        <div class="stat-value" style="color:var(--accent-info);"><%= stats.investigating %></div>
+        <div class="stat-note">In progress</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">✅ Resolved</div>
+        <div class="stat-value" style="color:var(--accent-success);"><%= stats.resolved %></div>
+        <div class="stat-note">Closed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🚨 Critical</div>
+        <div class="stat-value" style="color:var(--accent-danger);"><%= stats.critical %></div>
+        <div class="stat-note">Highest severity</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-24">
+      <form method="GET" action="/admin/compliance" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="form-group mb-0">
+          <label class="form-label">Filter by Status</label>
+          <select name="status" class="form-control">
+            <option value="">All</option>
+            <option value="open"          <%= statusFilter==='open'          ? 'selected':'' %>>Open</option>
+            <option value="investigating" <%= statusFilter==='investigating' ? 'selected':'' %>>Investigating</option>
+            <option value="resolved"      <%= statusFilter==='resolved'      ? 'selected':'' %>>Resolved</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Filter</button>
+        <a href="/admin/compliance" class="btn btn-ghost">Clear</a>
+      </form>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Investigation Orders</h3>
+        <span class="badge badge-muted"><%= tickets.length %> records</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Severity</th><th>Entity</th><th>Type</th><th>Reason</th><th>Source</th><th>Status</th><th>Created</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <% if (!tickets.length) { %>
+            <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted);">No investigation orders. All entities are in good standing ✅</td></tr>
+            <% } %>
+            <% tickets.forEach(t => { %>
+            <tr>
+              <td class="text-muted text-sm">#<%= t.id %></td>
+              <td>
+                <% const sc = t.severity==='Critical' ? 'danger' : t.severity==='High' ? 'warning' : t.severity==='Medium' ? 'info' : 'muted'; %>
+                <span class="badge badge-<%= sc %>"><%= t.severity %></span>
+              </td>
+              <td class="font-semibold text-sm"><%= t.entity_name || `#${t.entity_id}` %></td>
+              <td><span class="badge badge-muted"><%= t.entity_type %></span></td>
+              <td class="text-sm" style="max-width:240px; word-break:break-word;"><%= t.reason %></td>
+              <td>
+                <% if (t.auto_generated) { %>
+                <span class="badge badge-info">🤖 Auto</span>
+                <% } else { %>
+                <span class="badge badge-muted">Manual</span>
+                <% } %>
+              </td>
+              <td>
+                <% const sts = t.status==='resolved' ? 'success' : t.status==='investigating' ? 'info' : 'warning'; %>
+                <span class="badge badge-<%= sts %>"><%= t.status %></span>
+              </td>
+              <td class="text-muted text-sm"><%= new Date(t.created_at).toLocaleDateString() %></td>
+              <td>
+                <form action="/admin/compliance/status" method="POST" style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <input type="hidden" name="ticketId" value="<%= t.id %>">
+                  <select name="status" class="form-control" style="padding:4px 8px; font-size:12px; width:auto;">
+                    <option value="open"          <%= t.status==='open'          ? 'selected':'' %>>Open</option>
+                    <option value="investigating" <%= t.status==='investigating' ? 'selected':'' %>>Investigating</option>
+                    <option value="resolved"      <%= t.status==='resolved'      ? 'selected':'' %>>Resolved</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm">✓</button>
+                </form>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

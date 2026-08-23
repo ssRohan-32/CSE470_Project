@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/uptime-scores' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">📈 Uptime & Trust Scores</h1>
+        <p class="page-subtitle">Feature 14 — Trust scores accumulate daily via cron job (active working days)</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info mb-24">
+      <span>⏰</span>
+      <div class="text-sm">
+        <strong>Cron Job</strong> runs at midnight daily:
+        increments <code>operational_days</code> for active entities →
+        entities below <strong><%= threshold %></strong> trust score automatically receive an investigation order (Feature 15).
+      </div>
+    </div>
+
+    <!-- Pumps -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h3 class="card-title">🏪 Fuel Stations</h3>
+        <span class="badge badge-muted"><%= pumps.length %> stations</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Station</th><th>Location</th><th>Status</th><th>Operational Days</th><th>Trust Score</th><th>Standing</th></tr>
+          </thead>
+          <tbody>
+            <% pumps.forEach(p => { %>
+            <tr>
+              <td class="font-semibold"><%= p.name %></td>
+              <td class="text-muted text-sm"><%= p.location %></td>
+              <td>
+                <span class="badge badge-<%= p.status==='active' ? 'success' : 'warning' %>"><%= p.status %></span>
+              </td>
+              <td class="font-semibold text-center"><%= p.operational_days %> days</td>
+              <td>
+                <% const scoreColor = p.trust_score >= threshold ? 'var(--accent-success)' : p.trust_score >= 60 ? 'var(--accent-warning)' : 'var(--accent-danger)'; %>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div style="background:var(--bg-700); border-radius:999px; height:8px; flex:1; overflow:hidden;">
+                    <div style="height:100%; border-radius:999px; background:<%= scoreColor %>; width:<%= Math.min(100,p.trust_score).toFixed(0) %>%;"></div>
+                  </div>
+                  <span style="font-weight:700; color:<%= scoreColor %>; min-width:40px; text-align:right;"><%= (p.trust_score||0).toFixed(1) %></span>
+                </div>
+              </td>
+              <td>
+                <% if (p.trust_score >= threshold) { %>
+                <span class="badge badge-success">✅ Good Standing</span>
+                <% } else if (p.trust_score >= 60) { %>
+                <span class="badge badge-warning">⚠️ At Risk</span>
+                <% } else { %>
+                <span class="badge badge-danger">🚨 Critical</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Refineries -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🏭 Refineries</h3>
+        <span class="badge badge-muted"><%= refineries.length %> refineries</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Refinery</th><th>Location</th><th>Operational Days</th><th>Trust Score</th><th>Standing</th></tr>
+          </thead>
+          <tbody>
+            <% refineries.forEach(r => { %>
+            <tr>
+              <td class="font-semibold"><%= r.name %></td>
+              <td class="text-muted text-sm"><%= r.location %></td>
+              <td class="font-semibold text-center"><%= r.operational_days %> days</td>
+              <td>
+                <% const sc2 = r.trust_score >= threshold ? 'var(--accent-success)' : r.trust_score >= 60 ? 'var(--accent-warning)' : 'var(--accent-danger)'; %>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div style="background:var(--bg-700); border-radius:999px; height:8px; flex:1; overflow:hidden;">
+                    <div style="height:100%; border-radius:999px; background:<%= sc2 %>; width:<%= Math.min(100,r.trust_score).toFixed(0) %>%;"></div>
+                  </div>
+                  <span style="font-weight:700; color:<%= sc2 %>; min-width:40px; text-align:right;"><%= (r.trust_score||0).toFixed(1) %></span>
+                </div>
+              </td>
+              <td>
+                <% if (r.trust_score >= threshold) { %>
+                <span class="badge badge-success">✅ Good Standing</span>
+                <% } else if (r.trust_score >= 60) { %>
+                <span class="badge badge-warning">⚠️ At Risk</span>
+                <% } else { %>
+                <span class="badge badge-danger">🚨 Critical</span>
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

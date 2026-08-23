@@ -3,13 +3,16 @@
  * Module 1: Feature 13 — Maintenance Mode Toggle
  * Module 2: Feature 7  — Dynamic Pricing & Tax Engine [Strategy Pattern]
  *           Feature 9  — Automated Procurement Portal
+ * Module 3: Feature 12 — Anonymous Review Submission [Observer Pattern]
  */
 
-const OrderModel    = require('../models/OrderModel');
+const OrderModel      = require('../models/OrderModel');
 const { PricingContext } = require('../services/PricingStrategy');
-const PricingModel  = require('../models/PricingModel');
-const LedgerManager = require('../services/LedgerSingleton');
-const { getDb }     = require('../config/database');
+const PricingModel    = require('../models/PricingModel');
+const LedgerManager   = require('../services/LedgerSingleton');
+const ReviewModel     = require('../models/ReviewModel');
+const { feedbackSubject } = require('../services/ObserverService');
+const { getDb }       = require('../config/database');
 
 class PumpController {
 
@@ -174,6 +177,44 @@ class PumpController {
       parseFloat(multiplier)|| 1.0
     ));
   }
+
+  // ─── Feature 12: Pump Owner Anonymous Review (B2B) [Observer Pattern] ───────
+
+  static showFeedback(req, res) {
+    // Pump owners review refineries they work with (B2B, anonymous)
+    const refineries = getDb().prepare('SELECT id, name, location FROM refineries ORDER BY name').all();
+    res.render('pump/feedback', {
+      title: 'Submit Anonymous Review — NAFAS',
+      refineries,
+      user: req.session.user
+    });
+  }
+
+  static submitFeedback(req, res) {
+    const { target_id, rating, comment } = req.body;
+    const reviewer_id = req.session.user.id;
+
+    const result = ReviewModel.create({
+      reviewer_id,
+      target_type: 'refinery',
+      target_id:   parseInt(target_id),
+      rating:      parseInt(rating),
+      comment,
+      review_type: 'B2B'
+    });
+
+    // Observer Pattern — notify all subscribed observers
+    feedbackSubject.onReviewSubmitted({
+      target_type: 'refinery',
+      target_id:   parseInt(target_id),
+      rating:      parseInt(rating),
+      priority:    result.priority
+    });
+
+    req.flash('success', `Anonymous review submitted (B2B). Priority: ${result.priority}`);
+    res.redirect('/pump/feedback');
+  }
 }
 
 module.exports = PumpController;
+

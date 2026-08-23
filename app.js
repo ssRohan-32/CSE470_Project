@@ -20,7 +20,8 @@ const refineryRoutes = require('./routes/refineryRoutes');
 const pumpRoutes = require('./routes/pumpRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
-// Services (no background cron for Module 1+2 scope)
+// Module 3: Compliance Cron (F14 + F15)
+const ComplianceCron = require('./services/ComplianceCron');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -85,7 +86,7 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🔥 NAFAS — Module 1 + Module 2`);
+  console.log(`\n🔥 NAFAS — Module 1 + Module 2 + Module 3`);
   console.log(`   Running at http://localhost:${PORT}`);
   console.log(`   Environment: development`);
   console.log(`\n   ✅ Feature  1 — Pump Routing & Filtering`);
@@ -96,8 +97,15 @@ app.listen(PORT, () => {
   console.log(`   ✅ Feature  8 — B2B Supply Order Management`);
   console.log(`   ✅ Feature  9 — Procurement Portal`);
   console.log(`   ✅ Feature 10 — Inter-Refinery Referral`);
-  console.log(`   ✅ Feature 13 — Maintenance Mode Toggle`);
+  console.log(`   ✅ Feature 11 — Loyalty Points Engine`);
+  console.log(`   ✅ Feature 12 — Anonymous Reviews [Observer]`);
+  console.log(`   ✅ Feature 13 — Review Triage & Priority Engine`);
+  console.log(`   ✅ Feature 14 — Trust Score Accumulation [Cron]`);
+  console.log(`   ✅ Feature 15 — Auto Investigation Orders`);
   console.log(`   ✅ Feature 17 — Transaction Ledger [Singleton]\n`);
+
+  // Start daily compliance cron (F14 + F15)
+  ComplianceCron.start();
 });
 
 module.exports = app;

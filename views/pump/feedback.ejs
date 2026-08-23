@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/pump/feedback' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">💬 Submit Anonymous B2B Review</h1>
+        <p class="page-subtitle">Feature 12 — Pump Owners Rate Refineries (Anonymous)
+          <span class="pattern-badge">👁️ Observer Pattern</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">⭐ Rate a Refinery</h3></div>
+        <div class="alert alert-info mb-16">
+          <span>🔒</span>
+          <div class="text-sm"><strong>Anonymous B2B review</strong> — your identity is never revealed to the refinery. Stored for audit only.</div>
+        </div>
+
+        <form action="/pump/feedback" method="POST">
+          <div class="form-group">
+            <label class="form-label">Select Refinery</label>
+            <select name="target_id" class="form-control" required>
+              <option value="">-- Choose a Refinery --</option>
+              <% refineries.forEach(r => { %>
+              <option value="<%= r.id %>"><%= r.name %> — <%= r.location %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <% [1,2,3,4,5].forEach(n => { %>
+              <label style="cursor:pointer; flex:1;">
+                <input type="radio" name="rating" value="<%= n %>" <%= n===5?'checked':'' %> style="display:none;" class="star-radio">
+                <div class="star-card" style="border:2px solid var(--border-color); border-radius:8px; padding:10px; text-align:center; transition:all .2s;">
+                  <div style="font-size:20px;"><%= '⭐'.repeat(n) %></div>
+                  <div style="font-size:11px; margin-top:4px; color:var(--text-muted);"><%= ['Terrible','Bad','Okay','Good','Excellent'][n-1] %></div>
+                </div>
+              </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Comment (B2B Feedback)</label>
+            <textarea name="comment" class="form-control" rows="4" placeholder="Delivery quality, fuel purity, delays, overcharging..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">📤 Submit Anonymous Review</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">👁️ How Observer Works</h3></div>
+        <p class="text-secondary text-sm mb-16">After you submit, the system automatically:</p>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="alert alert-info mb-0">
+            <span>1️⃣</span>
+            <div class="text-sm"><strong>Priority Assigned</strong> — comment keywords determine High / Medium / Low severity automatically</div>
+          </div>
+          <div class="alert alert-warning mb-0">
+            <span>2️⃣</span>
+            <div class="text-sm"><strong>TrustScoreObserver</strong> — refinery's trust score is penalized for each negative review</div>
+          </div>
+          <div class="alert" style="border-color:var(--accent-danger); background:rgba(255,77,77,.08); margin-bottom:0;">
+            <span>3️⃣</span>
+            <div class="text-sm"><strong>SuperadminNotifyObserver</strong> — if 3+ High-priority reviews in 7 days, an investigation order is auto-created for the superadmin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.star-radio').forEach(r => {
+    r.addEventListener('change', () => {
+      document.querySelectorAll('.star-card').forEach(c => c.style.borderColor = 'var(--border-color)');
+      r.nextElementSibling.style.borderColor = 'var(--accent-warning)';
+    });
+    if (r.checked) r.nextElementSibling.style.borderColor = 'var(--accent-warning)';
+  });
+</script>
+</body>
+</html>

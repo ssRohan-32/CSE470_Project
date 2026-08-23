@@ -1,7 +1,7 @@
 <%
 /**
  * views/partials/sidebar.ejs
- * Role-based navigation — Module 1 + Module 2 only
+ * Role-based navigation — Module 1 + Module 2 + Module 3
  */
 const role = user ? user.role : null;
 const path = locals.currentPath || '';
@@ -26,7 +26,7 @@ const path = locals.currentPath || '';
 
   <nav class="sidebar-nav">
 
-    <!-- Public — always visible (Module 1: F1, F2) -->
+    <!-- Public — F1, F2 -->
     <span class="nav-section-label">Public</span>
     <a href="/home" class="nav-item <%= path === '/home' ? 'active' : '' %>">
       <span class="nav-icon">🗺️</span> Find Stations
@@ -35,19 +35,25 @@ const path = locals.currentPath || '';
       <span class="nav-icon">📊</span> Fuel Inventory
     </a>
 
-    <!-- Customer (Module 1: F5 · Module 2: F6) -->
+    <!-- Customer — M1:F5, M2:F6, M3:F11, M3:F12 -->
     <% if (role === 'customer') { %>
     <hr class="divider">
     <span class="nav-section-label">Customer</span>
     <a href="/customer/wallet" class="nav-item <%= path.startsWith('/customer/wallet') ? 'active' : '' %>">
-      <span class="nav-icon">💳</span> Digital Wallet <small style="opacity:.6;font-size:10px;">F5</small>
+      <span class="nav-icon">💳</span> Digital Wallet <small style="opacity:.55;font-size:10px;">F5</small>
     </a>
     <a href="/customer/payment" class="nav-item <%= path.startsWith('/customer/payment') ? 'active' : '' %>">
-      <span class="nav-icon">⛽</span> Buy Fuel <small style="opacity:.6;font-size:10px;">F6</small>
+      <span class="nav-icon">⛽</span> Buy Fuel <small style="opacity:.55;font-size:10px;">F6</small>
+    </a>
+    <a href="/customer/loyalty" class="nav-item <%= path.startsWith('/customer/loyalty') ? 'active' : '' %>">
+      <span class="nav-icon">🏆</span> Loyalty Points <small style="opacity:.55;font-size:10px;">F11</small>
+    </a>
+    <a href="/customer/feedback" class="nav-item <%= path.startsWith('/customer/feedback') ? 'active' : '' %>">
+      <span class="nav-icon">💬</span> Submit Review <small style="opacity:.55;font-size:10px;">F12</small>
     </a>
     <% } %>
 
-    <!-- Pump Owner (Module 1: F13 · Module 2: F7, F9) -->
+    <!-- Pump Owner — M1:F13, M2:F7,F9, M3:F12 -->
     <% if (role === 'pump_owner') { %>
     <hr class="divider">
     <span class="nav-section-label">Pump Owner</span>
@@ -55,17 +61,20 @@ const path = locals.currentPath || '';
       <span class="nav-icon">🏪</span> Dashboard
     </a>
     <a href="/pump/uptime" class="nav-item <%= path.startsWith('/pump/uptime') ? 'active' : '' %>">
-      <span class="nav-icon">🔄</span> Maintenance Mode <small style="opacity:.6;font-size:10px;">F13</small>
+      <span class="nav-icon">🔄</span> Maintenance Mode <small style="opacity:.55;font-size:10px;">F13</small>
     </a>
     <a href="/pump/procurement" class="nav-item <%= path.startsWith('/pump/procurement') ? 'active' : '' %>">
-      <span class="nav-icon">📦</span> Procurement Portal <small style="opacity:.6;font-size:10px;">F9</small>
+      <span class="nav-icon">📦</span> Procurement Portal <small style="opacity:.55;font-size:10px;">F9</small>
     </a>
     <a href="/pump/pricing" class="nav-item <%= path.startsWith('/pump/pricing') ? 'active' : '' %>">
-      <span class="nav-icon">💰</span> Dynamic Pricing <small style="opacity:.6;font-size:10px;">F7</small>
+      <span class="nav-icon">💰</span> Dynamic Pricing <small style="opacity:.55;font-size:10px;">F7</small>
+    </a>
+    <a href="/pump/feedback" class="nav-item <%= path.startsWith('/pump/feedback') ? 'active' : '' %>">
+      <span class="nav-icon">💬</span> Submit Review <small style="opacity:.55;font-size:10px;">F12</small>
     </a>
     <% } %>
 
-    <!-- Refinery Owner (Module 2: F8, F10) -->
+    <!-- Refinery Owner — M2:F8,F10 -->
     <% if (role === 'refinery_owner') { %>
     <hr class="divider">
     <span class="nav-section-label">Refinery Owner</span>
@@ -73,16 +82,25 @@ const path = locals.currentPath || '';
       <span class="nav-icon">🏭</span> Refinery Dashboard
     </a>
     <a href="/refinery/orders" class="nav-item <%= path.startsWith('/refinery/orders') ? 'active' : '' %>">
-      <span class="nav-icon">📋</span> Supply Orders <small style="opacity:.6;font-size:10px;">F8·F10</small>
+      <span class="nav-icon">📋</span> Supply Orders <small style="opacity:.55;font-size:10px;">F8·F10</small>
     </a>
     <% } %>
 
-    <!-- Superadmin (Module 1: F17) -->
+    <!-- Superadmin — M1:F17, M3:F13,F14,F15 -->
     <% if (role === 'superadmin') { %>
     <hr class="divider">
     <span class="nav-section-label">Superadmin</span>
     <a href="/admin/ledger" class="nav-item <%= path.startsWith('/admin/ledger') ? 'active' : '' %>">
-      <span class="nav-icon">📒</span> Transaction Ledger <small style="opacity:.6;font-size:10px;">F17</small>
+      <span class="nav-icon">📒</span> Transaction Ledger <small style="opacity:.55;font-size:10px;">F17</small>
+    </a>
+    <a href="/admin/reviews" class="nav-item <%= path.startsWith('/admin/reviews') ? 'active' : '' %>">
+      <span class="nav-icon">⚖️</span> Review Triage <small style="opacity:.55;font-size:10px;">F13</small>
+    </a>
+    <a href="/admin/uptime-scores" class="nav-item <%= path.startsWith('/admin/uptime-scores') ? 'active' : '' %>">
+      <span class="nav-icon">📈</span> Uptime Scores <small style="opacity:.55;font-size:10px;">F14</small>
+    </a>
+    <a href="/admin/compliance" class="nav-item <%= path.startsWith('/admin/compliance') ? 'active' : '' %>">
+      <span class="nav-icon">🎫</span> Investigation Orders <small style="opacity:.55;font-size:10px;">F15</small>
     </a>
     <% } %>
 
@@ -90,9 +108,7 @@ const path = locals.currentPath || '';
 
   <div class="sidebar-footer">
     <% if (user) { %>
-    <a href="/logout" class="btn btn-ghost w-full" style="justify-content:center;">
-      🚪 Logout
-    </a>
+    <a href="/logout" class="btn btn-ghost w-full" style="justify-content:center;">🚪 Logout</a>
     <% } else { %>
     <a href="/login" class="btn btn-primary w-full" style="justify-content:center;">Login</a>
     <% } %>

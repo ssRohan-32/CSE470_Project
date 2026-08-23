@@ -1,0 +1,239 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam packageStyle rectangle
+
+' ─────────────────────────────────────────────────────────────
+'  NAFAS — Module 1 Class Diagram
+'
+'  Features:
+'    F1  - Route & filter nearby pumps (Haversine distance)
+'    F2  - Real-time fuel inventory dashboard
+'    F5  - Digital wallet (deposit, buy fuel)
+'    F13 - Maintenance Mode toggle for pump owners
+'    F17 - Centralized transaction ledger (Singleton)
+'
+'  Stack: JavaScript / Node.js · Express.js · EJS · SQLite
+' ─────────────────────────────────────────────────────────────
+
+package "Models (Data Layer)" {
+
+    abstract class User {
+        # userId: String
+        # name: String
+        # email: String
+        # password: String
+        # role: String
+        # phone: String
+        # createdAt: Date
+        + findByEmail(email: String): User
+        + verifyPassword(plain: String): Boolean
+    }
+
+    class Customer {
+        + showWallet(): void
+        + depositWallet(amount: Double): void
+    }
+
+    class PumpOwner {
+        - pumpList: List<PumpStation>
+        + showDashboard(): void
+        + showUptime(): void
+        + toggleMaintenanceMode(pumpId: String, status: String): void
+    }
+
+    class Superadmin {
+        + showLedger(): void
+    }
+
+    ' ── F1 & F13: Pump Station ──────────────────────────────
+    class PumpStation {
+        - pumpId: String
+        - ownerId: String
+        - name: String
+        - location: String
+        - latitude: Double
+        - longitude: Double
+        - status: String
+        - createdAt: Date
+        + updateInventory(): void
+    }
+
+    ' ── F2: Fuel Inventory ──────────────────────────────────
+    class FuelInventory {
+        - inventoryId: String
+        - pumpId: String
+        - fuelType: String
+        - quantity: Double
+        - capacity: Double
+        - pricePerLiter: Double
+        - updatedAt: Date
+    }
+
+    ' ── F5: Digital Wallet ──────────────────────────────────
+    class DigitalWallet {
+        - walletId: String
+        - userId: String
+        - balance: Double
+        - createdAt: Date
+        + depositMoney(amount: Double): void
+        + getBalance(): Double
+        + getTransactions(): List<WalletTransaction>
+    }
+
+    class WalletTransaction {
+        - txId: String
+        - walletId: String
+        - type: String
+        - amount: Double
+        - description: String
+        - createdAt: Date
+    }
+
+    ' ── F17: Centralized Ledger (Singleton) ─────────────────
+    class TransactionLedger <<Singleton>> {
+        - {static} instance: TransactionLedger
+        - instanceId: Long
+        - masterList: List<LedgerEntry>
+        + {static} getInstance(): TransactionLedger
+        + log(entry: LedgerEntry): Integer
+        + getAll(options: Object): List<LedgerEntry>
+        + getStats(): Object
+        + getTotalCount(): Integer
+    }
+
+    class LedgerEntry {
+        - entryId: String
+        - transactionType: String
+        - referenceId: String
+        - amount: Double
+        - description: String
+        - actorId: String
+        - createdAt: Date
+    }
+
+}
+
+package "Services" {
+
+    ' ── F1: Routing Service (Haversine Algorithm) ────────────
+    class RoutingService {
+        + {static} haversine(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double
+        + {static} filterByDistance(pumps: List<PumpStation>, userLat: Double, userLng: Double, maxKm: Double): List<PumpStation>
+        + {static} sortByDistance(pumps: List<PumpStation>): List<PumpStation>
+    }
+
+    ' ── F5: Payment Adapter Pattern ──────────────────────────
+    interface PaymentGateway <<Adapter>> {
+        + processPayment(amount: Double): Boolean
+    }
+
+    class BkashAdapter {
+        + processPayment(amount: Double): Boolean
+    }
+
+    class BankTransferAdapter {
+        + processPayment(amount: Double): Boolean
+    }
+
+}
+
+package "Controllers (MVC)" {
+
+    class PublicController {
+        + showHome(req, res): void
+        + showInventory(req, res): void
+        + apiInventory(req, res): void
+    }
+
+    class CustomerController {
+        + showWallet(req, res): void
+        + depositWallet(req, res): void
+    }
+
+    class PumpController {
+        + showDashboard(req, res): void
+        + showUptime(req, res): void
+        + toggleStatus(req, res): void
+    }
+
+    class AdminController {
+        + showLedger(req, res): void
+    }
+
+    class AuthController {
+        + showLogin(req, res): void
+        + showRegister(req, res): void
+        + login(req, res): void
+        + register(req, res): void
+        + logout(req, res): void
+        + getDashboardUrl(role: String): String
+    }
+
+}
+
+' ─────────────────────────────────────────────────────────────
+'  Inheritance — User hierarchy (Module 1 roles only)
+' ─────────────────────────────────────────────────────────────
+User <|-- Customer
+User <|-- PumpOwner
+User <|-- Superadmin
+
+' ─────────────────────────────────────────────────────────────
+'  Associations — Data relationships
+' ─────────────────────────────────────────────────────────────
+
+' F5: Customer owns wallet; wallet logs transactions
+Customer "1" *-- "1" DigitalWallet : owns >
+DigitalWallet "1" *-- "*" WalletTransaction : records >
+
+' F1 + F13: Pump owner manages stations; each station has fuel inventory
+PumpOwner "1" o-- "1..*" PumpStation : manages >
+PumpStation "1" *-- "1..*" FuelInventory : contains >
+
+' F17: Singleton ledger stores entries; any actor can log
+TransactionLedger "1" *-- "*" LedgerEntry : stores >
+Customer ..> TransactionLedger : logs deposit >
+Superadmin "1" ..> TransactionLedger : views >
+
+' F2: Public controller reads FuelInventory
+PublicController ..> FuelInventory : reads (F2) >
+PublicController ..> RoutingService : uses (F1) >
+
+' ─────────────────────────────────────────────────────────────
+'  Controller → Model dependencies
+' ─────────────────────────────────────────────────────────────
+CustomerController ..> DigitalWallet : manages (F5) >
+CustomerController ..> TransactionLedger : logs (F17) >
+PumpController ..> PumpStation : toggles status (F13) >
+PumpController ..> TransactionLedger : logs toggle (F17) >
+AdminController ..> TransactionLedger : reads (F17) >
+AuthController ..> User : authenticates >
+
+' ─────────────────────────────────────────────────────────────
+'  Design Patterns
+' ─────────────────────────────────────────────────────────────
+
+' Adapter Pattern (F5)
+BkashAdapter ..|> PaymentGateway
+BankTransferAdapter ..|> PaymentGateway
+DigitalWallet ..> PaymentGateway : uses (F5) >
+
+' Singleton Pattern (F17)
+note right of TransactionLedger
+  Singleton: only one instance
+  exists per server process.
+  LedgerManager._instance
+  enforces this in Node.js.
+end note
+
+' Haversine note (F1)
+note right of RoutingService
+  Haversine formula calculates
+  great-circle distance between
+  two GPS coordinates (km).
+  Used to sort & filter pumps
+  by proximity in Feature 1.
+end note
+
+@enduml

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/customer/loyalty' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🏆 Loyalty Points</h1>
+        <p class="page-subtitle">Feature 11 — Gamified Fuel Points Engine (Module 3)</p>
+      </div>
+    </div>
+
+    <!-- Points Summary -->
+    <div class="grid-2 mb-24">
+      <div class="card" style="background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,165,0,.08)); border-color:var(--accent-warning);">
+        <div style="text-align:center; padding:16px 0;">
+          <div style="font-size:40px; margin-bottom:8px;">🏆</div>
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:4px;">Your Points</div>
+          <div style="font-size:56px; font-weight:800; color:var(--accent-warning); line-height:1;"><%= loyalty.points.toLocaleString() %></div>
+          <div class="mt-12">
+            <span class="badge badge-warning" style="font-size:14px; padding:6px 16px;">
+              <%= tier.name %> Tier · <%= (tier.discount * 100).toFixed(0) %>% discount
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tier Progress -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">📊 Tier Progress</h3></div>
+        <% tiers.slice().reverse().forEach(t => { %>
+        <div class="mb-12">
+          <div class="flex-between mb-4">
+            <span class="font-semibold" style="color:<%= t.color !== '#E5E4E2' ? t.color : 'var(--text-primary)' %>"><%= t.name %></span>
+            <span class="text-muted text-sm"><%= t.minPoints.toLocaleString() %> pts</span>
+          </div>
+          <div style="background:var(--bg-700); border-radius:999px; height:8px; overflow:hidden;">
+            <div style="height:100%; border-radius:999px; background:<%= t.color !== '#E5E4E2' ? t.color : '#C0C0C0' %>; width:<%= Math.min(100, (loyalty.points / Math.max(t.minPoints,1)) * 100).toFixed(0) %>%;"></div>
+          </div>
+        </div>
+        <% }) %>
+        <div class="alert alert-info mt-8 mb-0">
+          <span>💡</span>
+          <div class="text-sm">Earn <strong>10 pts/৳1</strong> spent · <strong>1.5× bonus</strong> with wallet payments</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rewards Catalog -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h3 class="card-title">🎁 Redeem Rewards</h3>
+        <span class="badge badge-success"><%= loyalty.points %> pts available</span>
+      </div>
+      <div class="grid-3" style="gap:16px;">
+        <% rewards.forEach(r => { %>
+        <div class="card" style="border:2px solid <%= loyalty.points >= r.points ? 'var(--accent-success)' : 'var(--border-color)' %>; margin:0;">
+          <div style="text-align:center; padding:12px 0 8px;">
+            <div style="font-size:28px; margin-bottom:6px;"><%= r.type === 'discount' ? '🏷️' : r.type === 'voucher' ? '🎟️' : r.type === 'gift' ? '🎁' : '⭐' %></div>
+            <div class="font-semibold text-sm mb-4"><%= r.name %></div>
+            <span class="badge badge-warning"><%= r.points.toLocaleString() %> pts</span>
+          </div>
+          <% if (loyalty.points >= r.points) { %>
+          <form action="/customer/loyalty/redeem" method="POST" class="mt-8">
+            <input type="hidden" name="rewardId" value="<%= r.id %>">
+            <button class="btn btn-success w-full btn-sm" style="justify-content:center;">✅ Redeem</button>
+          </form>
+          <% } else { %>
+          <div class="text-muted text-xs text-center mt-8">Need <%= (r.points - loyalty.points).toLocaleString() %> more pts</div>
+          <% } %>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Redemption History -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🕐 Redemption History</h3>
+        <span class="badge badge-muted"><%= history.length %> records</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Date</th><th>Reward</th><th>Type</th><th>Points Used</th></tr></thead>
+          <tbody>
+            <% if (!history.length) { %>
+            <tr><td colspan="4" style="text-align:center;padding:28px;color:var(--text-muted);">No redemptions yet. Earn points by buying fuel!</td></tr>
+            <% } %>
+            <% history.forEach(h => { %>
+            <tr>
+              <td class="text-sm text-muted"><%= new Date(h.created_at).toLocaleDateString() %></td>
+              <td class="font-semibold"><%= h.description %></td>
+              <td><span class="badge badge-info"><%= h.reward_type %></span></td>
+              <td class="font-bold text-warning">−<%= h.points_used.toLocaleString() %> pts</td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

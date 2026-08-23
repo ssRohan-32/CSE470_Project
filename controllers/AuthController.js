@@ -5,6 +5,7 @@
 
 const UserModel   = require('../models/UserModel');
 const WalletModel = require('../models/WalletModel');
+const LoyaltyModel = require('../models/LoyaltyModel');
 
 class AuthController {
   static showLogin(req, res) {
@@ -44,9 +45,10 @@ class AuthController {
       }
       const userId = UserModel.create({ name, email, password, role, phone });
 
-      // Auto-create wallet for customers
+      // Auto-create wallet + loyalty for customers
       if (role === 'customer') {
         WalletModel.createWallet(userId);
+        LoyaltyModel.getByUserId(userId); // initializes loyalty record
       }
 
       req.flash('success', 'Account created! Please log in.');

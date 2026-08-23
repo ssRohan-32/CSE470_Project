@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/customer/feedback' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">💬 Submit Anonymous Review</h1>
+        <p class="page-subtitle">Feature 12 — Observer Pattern: reviews auto-flag admin alerts
+          <span class="pattern-badge">👁️ Observer Pattern</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Review Form -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">⭐ Rate a Station</h3></div>
+        <div class="alert alert-info mb-16">
+          <span>🔒</span>
+          <div class="text-sm"><strong>Anonymous submission</strong> — your identity is never revealed to the station.</div>
+        </div>
+
+        <form action="/customer/feedback" method="POST">
+          <div class="form-group">
+            <label class="form-label">Select Station</label>
+            <select name="target_id" class="form-control" required>
+              <option value="">-- Choose a Station --</option>
+              <% pumps.forEach(p => { %>
+              <option value="<%= p.id %>"><%= p.name %> — <%= p.location %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <% [1,2,3,4,5].forEach(n => { %>
+              <label style="cursor:pointer; flex:1;">
+                <input type="radio" name="rating" value="<%= n %>" <%= n===5?'checked':'' %> style="display:none;" class="star-radio">
+                <div class="star-card" style="border:2px solid var(--border-color); border-radius:8px; padding:10px; text-align:center; transition:all .2s;">
+                  <div style="font-size:20px;"><%= '⭐'.repeat(n) %></div>
+                  <div style="font-size:11px; margin-top:4px; color:var(--text-muted);"><%= ['Terrible','Bad','Okay','Good','Excellent'][n-1] %></div>
+                </div>
+              </label>
+              <% }) %>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Comment</label>
+            <textarea name="comment" class="form-control" rows="4" placeholder="Describe your experience... (keywords like 'scam', 'leak', 'contamination' will auto-flag as High priority)" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">📤 Submit Anonymous Review</button>
+        </form>
+      </div>
+
+      <!-- Observer Pattern Info -->
+      <div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">👁️ Observer Pattern in Action</h3></div>
+          <p class="text-secondary text-sm mb-16">When you submit a review, the system automatically notifies all subscribed observers:</p>
+          <div style="background:var(--bg-800); border-radius:8px; padding:16px; font-family:monospace; font-size:12px; line-height:2;">
+            <span style="color:var(--accent-success);">FeedbackSubject.notify(event)</span><br>
+            <span style="color:var(--text-muted);">├─ TrustScoreObserver → adjusts entity trust score</span><br>
+            <span style="color:var(--text-muted);">└─ SuperadminNotifyObserver → auto-creates investigation order (if ≥3 High reviews in 7 days)</span>
+          </div>
+
+          <hr class="divider">
+          <div class="card-header"><h3 class="card-title mt-0">🔑 Priority Keywords</h3></div>
+          <div class="mb-8">
+            <span class="badge badge-danger" style="margin-right:4px;">High</span>
+            <span class="text-sm text-muted">scam · fraud · contamina · leak · fire · illegal · dangerous</span>
+          </div>
+          <div class="mb-8">
+            <span class="badge badge-warning" style="margin-right:4px;">Medium</span>
+            <span class="text-sm text-muted">overcharge · rude · slow · problem · bad · terrible</span>
+          </div>
+          <div>
+            <span class="badge badge-success" style="margin-right:4px;">Low</span>
+            <span class="text-sm text-muted">all other reviews</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.star-radio').forEach(r => {
+    r.addEventListener('change', () => {
+      document.querySelectorAll('.star-card').forEach(c => c.style.borderColor = 'var(--border-color)');
+      r.nextElementSibling.style.borderColor = 'var(--accent-warning)';
+    });
+    if (r.checked) r.nextElementSibling.style.borderColor = 'var(--accent-warning)';
+  });
+</script>
+</body>
+</html>

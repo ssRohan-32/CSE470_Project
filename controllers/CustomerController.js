@@ -2,27 +2,34 @@
  * controllers/CustomerController.js
  * Module 1: Feature 5  — Digital Wallet
  * Module 2: Feature 6  — Payment Gateway [Adapter Pattern]
+ * Module 3: Feature 11 — Gamified Loyalty Points Engine
+ *           Feature 12 — Anonymous Feedback / Observer Pattern
  */
 
-const WalletModel    = require('../models/WalletModel');
+const WalletModel      = require('../models/WalletModel');
 const TransactionModel = require('../models/TransactionModel');
-const FuelModel      = require('../models/FuelModel');
-const PaymentAdapter = require('../services/PaymentAdapter');
+const FuelModel        = require('../models/FuelModel');
+const LoyaltyModel     = require('../models/LoyaltyModel');
+const ReviewModel      = require('../models/ReviewModel');
+const PaymentAdapter   = require('../services/PaymentAdapter');
 const { PricingContext } = require('../services/PricingStrategy');
-const LedgerManager  = require('../services/LedgerSingleton');
-const { getDb }      = require('../config/database');
+const { feedbackSubject } = require('../services/ObserverService');
+const LedgerManager    = require('../services/LedgerSingleton');
+const { getDb }        = require('../config/database');
 
 class CustomerController {
 
-  /** Feature 5: Digital Wallet — show balance & transactions */
+  // ─── Feature 5: Digital Wallet ─────────────────────────────────────────────
+
   static showWallet(req, res) {
-    const userId      = req.session.user.id;
-    const wallet      = WalletModel.getByUserId(userId) || { balance: 0 };
+    const userId       = req.session.user.id;
+    const wallet       = WalletModel.getByUserId(userId) || { balance: 0 };
     const transactions = WalletModel.getTransactions(userId, 20);
+    const loyalty      = LoyaltyModel.getByUserId(userId);
 
     res.render('customer/wallet', {
       title: 'My Wallet — NAFAS',
-      wallet, transactions,
+      wallet, transactions, loyalty,
       user: req.session.user
     });
   }
@@ -45,7 +52,8 @@ class CustomerController {
     res.redirect('/customer/wallet');
   }
 
-  /** Feature 6: Software Payment Gateway [ADAPTER PATTERN] */
+  // ─── Feature 6: Payment Gateway [Adapter Pattern] ──────────────────────────
+
   static showPayment(req, res) {
     const pumps   = FuelModel.getActivePumpsWithFuel();
     const wallet  = WalletModel.getByUserId(req.session.user.id) || { balance: 0 };
@@ -71,19 +79,17 @@ class CustomerController {
 
       if (!inventory) throw new Error('Fuel type not available at selected pump.');
 
-      const qty = parseFloat(quantity);
-      const ctx = new PricingContext(pricing_strategy || 'Standard');
+      const qty      = parseFloat(quantity);
+      const ctx      = new PricingContext(pricing_strategy || 'Standard');
       const priceCalc = ctx.calculate(inventory.price_per_liter, qty, 0.15);
 
-      // Deduct from wallet if wallet payment
       if (payment_method === 'wallet') {
         WalletModel.deduct(userId, priceCalc.finalPrice, `Fuel purchase: ${qty}L ${fuel_type}`);
       }
 
-      // Process through Adapter
       const paymentResult = await PaymentAdapter.processPayment(payment_method, {
         userId,
-        amount: priceCalc.finalPrice,
+        amount:    priceCalc.finalPrice,
         reference: `FUEL-${Date.now()}`
       });
 
@@ -103,13 +109,16 @@ class CustomerController {
         pricing_strategy: pricing_strategy || 'Standard'
       });
 
+      // Feature 11: Award loyalty points
+      const loyaltyResult = LoyaltyModel.awardPoints(userId, priceCalc.finalPrice, payment_method);
+
       // Log to Singleton Ledger (Feature 17)
       LedgerManager.getInstance().log({
         transaction_type: 'fuel_purchase',
-        reference_id: txId,
-        amount: priceCalc.finalPrice,
-        description: `${qty}L ${fuel_type} at pump #${pump_id} via ${payment_method}`,
-        actor_id: userId
+        reference_id:     txId,
+        amount:           priceCalc.finalPrice,
+        description:      `${qty}L ${fuel_type} at pump #${pump_id} via ${payment_method}`,
+        actor_id:         userId
       });
 
       // Deduct inventory
@@ -121,12 +130,85 @@ class CustomerController {
           .run(Math.max(0, stock.quantity - qty), pump_id, fuel_type);
       }
 
-      req.flash('success', `✅ Payment successful via ${payment_method}! (${paymentResult.transactionId})`);
-      res.redirect('/customer/wallet');
+      req.flash('success', `✅ Payment successful! +${loyaltyResult.pointsEarned} loyalty points earned (${loyaltyResult.tier} tier).`);
+      res.redirect('/customer/loyalty');
     } catch (err) {
       req.flash('error', err.message);
       res.redirect('/customer/payment');
     }
+  }
+
+  // ─── Feature 11: Loyalty Points & Redemption ───────────────────────────────
+
+  static showLoyalty(req, res) {
+    const userId  = req.session.user.id;
+    const loyalty = LoyaltyModel.getByUserId(userId);
+    const tier    = LoyaltyModel.getTier(loyalty.points);
+    const history = LoyaltyModel.getRedemptionHistory(userId);
+
+    res.render('customer/loyalty', {
+      title:   'Loyalty Points — NAFAS',
+      loyalty, tier, history,
+      tiers:   LoyaltyModel.TIERS,
+      rewards: LoyaltyModel.REWARDS,
+      user:    req.session.user
+    });
+  }
+
+  static redeemReward(req, res) {
+    const { rewardId } = req.body;
+    const userId       = req.session.user.id;
+    try {
+      const result = LoyaltyModel.redeemPoints(userId, rewardId);
+      LedgerManager.getInstance().log({
+        transaction_type: 'loyalty_redemption',
+        reference_id:     null,
+        amount:           0,
+        description:      `Redeemed: ${result.reward}`,
+        actor_id:         userId
+      });
+      req.flash('success', `🎁 Reward redeemed: ${result.reward}! Remaining points: ${result.remainingPoints}`);
+    } catch (err) {
+      req.flash('error', err.message);
+    }
+    res.redirect('/customer/loyalty');
+  }
+
+  // ─── Feature 12: Anonymous Feedback [Observer Pattern] ─────────────────────
+
+  static showFeedback(req, res) {
+    const pumps = getDb().prepare('SELECT id, name, location FROM pumps WHERE status = ?').all('active');
+
+    res.render('customer/feedback', {
+      title: 'Submit Feedback — NAFAS',
+      pumps,
+      user: req.session.user
+    });
+  }
+
+  static submitFeedback(req, res) {
+    const { target_id, rating, comment } = req.body;
+    const reviewer_id = req.session.user.id;
+
+    const result = ReviewModel.create({
+      reviewer_id,
+      target_type: 'pump',
+      target_id:   parseInt(target_id),
+      rating:      parseInt(rating),
+      comment,
+      review_type: 'B2C'
+    });
+
+    // Observer Pattern — notifies TrustScoreObserver + SuperadminNotifyObserver
+    feedbackSubject.onReviewSubmitted({
+      target_type: 'pump',
+      target_id:   parseInt(target_id),
+      rating:      parseInt(rating),
+      priority:    result.priority
+    });
+
+    req.flash('success', `Anonymous review submitted! Priority assigned: ${result.priority}`);
+    res.redirect('/customer/feedback');
   }
 }
 
