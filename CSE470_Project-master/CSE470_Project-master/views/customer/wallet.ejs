@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/customer/wallet' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">💳 Digital Wallet</h1>
+        <p class="page-subtitle">Feature 5 — Integrated Digital Wallet with Loyalty Multiplier</p>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-24">
+      <!-- Wallet Card -->
+      <div class="card" style="background:linear-gradient(135deg, rgba(0,229,160,0.15), rgba(0,212,255,0.1)); border-color:var(--accent-success);">
+        <div style="text-align:center; padding:16px 0;">
+          <div style="font-size:40px; margin-bottom:12px;">💳</div>
+          <div style="font-size:12px; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted); margin-bottom:4px;">Available Balance</div>
+          <div style="font-size:56px; font-weight:800; background:var(--gradient-success); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1;">
+            ৳<%= wallet ? wallet.balance.toFixed(2) : '0.00' %>
+        </div>
+      </div>
+
+      <!-- Deposit Form -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">💸 Top Up Wallet</h3></div>
+        <form action="/customer/wallet/deposit" method="POST">
+          <div class="form-group">
+            <label class="form-label">Amount (৳)</label>
+            <input type="number" name="amount" class="form-control" placeholder="500.00" min="10" step="0.01" required id="deposit-amount">
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:16px;">
+            <% [100,500,1000,2000].forEach(amt => { %>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('deposit-amount').value=<%= amt %>">৳<%= amt %></button>
+            <% }) %>
+          </div>
+          <button type="submit" class="btn btn-success w-full" style="justify-content:center;">
+            ➕ Add Funds
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🕐 Transaction History</h3>
+        <span class="badge badge-info"><%= transactions.length %> records</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date & Time</th><th>Type</th><th>Description</th><th>Amount</th></tr>
+          </thead>
+          <tbody>
+            <% if (!transactions.length) { %>
+            <tr><td colspan="4" style="text-align:center; padding:32px; color:var(--text-muted);">No transactions yet.</td></tr>
+            <% } %>
+            <% transactions.forEach(t => { %>
+            <tr>
+              <td class="text-sm text-muted"><%= new Date(t.created_at).toLocaleString() %></td>
+              <td>
+                <span class="badge <%= t.type === 'deposit' ? 'badge-success' : t.type === 'payment' ? 'badge-warning' : 'badge-danger' %>">
+                  <%= t.type === 'deposit' ? '📥' : '📤' %> <%= t.type %>
+                </span>
+              </td>
+              <td class="text-sm"><%= t.description || '—' %></td>
+              <td class="font-bold <%= t.type === 'deposit' ? 'text-success' : 'text-warning' %>">
+                <%= t.type === 'deposit' ? '+' : '-' %>৳<%= Math.abs(t.amount).toFixed(2) %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>
