@@ -1,9 +1,0 @@
-node_modules/
-module1.db
-module1.db-shm
-module1.db-wal
-*.db
-*.db-shm
-*.db-wal
-.env
-npm-debug.log*
