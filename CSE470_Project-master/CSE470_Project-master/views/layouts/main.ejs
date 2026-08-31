@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'FuelStation MS' %></title>
+  <meta name="description" content="Fuel Station Management System — Manage fuel stations, inventory, analytics and more.">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('../partials/sidebar', { currentPath: locals.currentPath || '' }) %>
+
+    <main class="main-content animate-fade">
+      <%- include('../partials/flash') %>
+      <%- body %>
+    </main>
+  </div>
+
+  <script src="/js/charts.js"></script>
+</body>
+</html>

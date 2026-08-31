@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/ledger' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">📒 Global Transaction Ledger</h1>
+        <p class="page-subtitle">Feature 17 — Immutable Ledger
+          <span class="pattern-badge">🔒 Singleton Pattern</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Singleton Info Banner -->
+    <div class="alert alert-info mb-24">
+      <span>🔐</span>
+      <div>
+        <strong>Singleton Pattern Active</strong> — Only one LedgerManager instance exists at a time.
+        <span class="text-muted text-sm"> Instance ID: <code style="background:var(--bg-800);padding:2px 6px;border-radius:4px;"><%= instanceId %></code></span>
+        <br><span class="text-muted text-sm">All financial transactions flow through this single, immutable instance preventing race conditions.</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid mb-24">
+      <% stats.forEach(s => { %>
+      <div class="stat-card">
+        <div class="stat-icon">📌</div>
+        <div class="stat-value"><%= s.count %></div>
+        <div class="stat-label"><%= s.transaction_type.replace('_',' ') %></div>
+      </div>
+      <% }) %>
+      <div class="stat-card success">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value"><%= total.toLocaleString() %></div>
+        <div class="stat-label">Total Log Entries</div>
+      </div>
+    </div>
+
+    <!-- Filter by type -->
+    <div class="card mb-16">
+      <form method="GET" action="/admin/ledger" style="display:flex; gap:12px; align-items:flex-end;">
+        <div class="form-group mb-0" style="flex:1;">
+          <label class="form-label">Filter by Transaction Type</label>
+          <select name="type" class="form-control">
+            <option value="">All Types</option>
+            <% stats.forEach(s => { %>
+            <option value="<%= s.transaction_type %>" <%= typeFilter === s.transaction_type ? 'selected' : '' %>><%= s.transaction_type %></option>
+            <% }) %>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <a href="/admin/ledger" class="btn btn-ghost btn-sm">Clear</a>
+      </form>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🔏 Immutable Ledger Entries</h3>
+        <span class="badge badge-muted">Page <%= page %>/<%= totalPages %></span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Timestamp</th><th>Type</th><th>Amount</th><th>Description</th><th>Actor</th></tr>
+          </thead>
+          <tbody>
+            <% entries.forEach(e => { %>
+            <tr>
+              <td class="text-muted text-sm"><%= e.id %></td>
+              <td class="text-sm text-muted"><%= new Date(e.created_at).toLocaleString() %></td>
+              <td><span class="badge badge-purple text-xs"><%= e.transaction_type %></span></td>
+              <td class="font-bold text-success">৳<%= e.amount.toLocaleString() %></td>
+              <td class="text-sm"><%= e.description %></td>
+              <td class="text-sm text-muted"><%= e.actor_name || 'System' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; justify-content:center; gap:8px; padding:16px;">
+        <% if (page > 1) { %>
+        <a href="/admin/ledger?page=<%= page-1 %><%= typeFilter?'&type='+typeFilter:'' %>" class="btn btn-ghost btn-sm">← Prev</a>
+        <% } %>
+        <span class="text-muted text-sm" style="padding:8px;">Page <%= page %> of <%= totalPages %></span>
+        <% if (page < totalPages) { %>
+        <a href="/admin/ledger?page=<%= page+1 %><%= typeFilter?'&type='+typeFilter:'' %>" class="btn btn-ghost btn-sm">Next →</a>
+        <% } %>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>
