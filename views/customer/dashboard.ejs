@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/customer/dashboard' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">📈 My Analytics Dashboard</h1>
+        <p class="page-subtitle">Feature 3 — Consumption &amp; Expense Analytics (Module 4)</p>
+      </div>
+      <a href="/customer/payment" class="btn btn-primary">⛽ Buy Fuel</a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stat-grid mb-24">
+      <div class="stat-card">
+        <div class="stat-icon">💳</div>
+        <div class="stat-value">৳<%= wallet ? wallet.balance.toFixed(2) : '0.00' %></div>
+        <div class="stat-label">Wallet Balance</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value"><%= loyalty.points.toLocaleString() %></div>
+        <div class="stat-label"><%= tier.name %> Tier Points</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon">⛽</div>
+        <div class="stat-value"><%= transactions.reduce((s,t) => s + t.quantity, 0).toFixed(0) %>L</div>
+        <div class="stat-label">Total Fuel Purchased</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value">৳<%= transactions.reduce((s,t) => s + t.total_amount, 0).toFixed(0) %></div>
+        <div class="stat-label">Total Spent (Recent)</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">📊 Spending Trend (30 Days)</h3></div>
+        <div class="chart-container"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">⛽ Fuel Type Breakdown</h3></div>
+        <div class="chart-container"><canvas id="fuelDoughnut"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🧾 Recent Transactions</h3>
+        <span class="badge badge-muted"><%= transactions.length %> records</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Station</th><th>Fuel</th><th>Qty (L)</th><th>Amount</th><th>Payment</th><th>Strategy</th></tr>
+          </thead>
+          <tbody>
+            <% if (!transactions.length) { %>
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">No transactions yet. <a href="/customer/payment">Buy fuel to get started!</a></td></tr>
+            <% } %>
+            <% transactions.forEach(tx => { %>
+            <tr>
+              <td class="text-sm text-muted"><%= new Date(tx.created_at).toLocaleDateString() %></td>
+              <td class="font-semibold"><%= tx.pump_name %></td>
+              <td><span class="fuel-<%= tx.fuel_type.toLowerCase() %> font-semibold"><%= tx.fuel_type %></span></td>
+              <td><%= tx.quantity.toFixed(2) %>L</td>
+              <td class="font-bold text-success">৳<%= tx.total_amount.toFixed(2) %></td>
+              <td><span class="badge badge-info"><%= tx.payment_method %></span></td>
+              <td><span class="tag"><%= tx.pricing_strategy %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/charts.js"></script>
+<script>
+  const trendData = <%- trend %>;
+  const parsed = typeof trendData === 'string' ? JSON.parse(trendData) : trendData;
+  renderSpendingTrend('trendChart', parsed);
+
+  // Fuel breakdown doughnut
+  const fuelCounts = {};
+  <% transactions.forEach(tx => { %>
+    fuelCounts['<%= tx.fuel_type %>'] = (fuelCounts['<%= tx.fuel_type %>'] || 0) + 1;
+  <% }) %>
+  if (Object.keys(fuelCounts).length) {
+    new Chart(document.getElementById('fuelDoughnut'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(fuelCounts),
+        datasets: [{ data: Object.values(fuelCounts), backgroundColor: ['#ff9f43','#a29bfe','#00e5a0','#00d4ff'], borderColor: '#10141f', borderWidth: 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'right', labels: { padding: 16, usePointStyle: true } } } }
+    });
+  }
+</script>
+</body>
+</html>

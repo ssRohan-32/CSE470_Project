@@ -20,4 +20,8 @@ router.post('/orders/status',      guard, RefineryController.updateOrderStatus);
 // Feature 10: Inter-Refinery Referral Engine
 router.post('/orders/refer', guard, RefineryController.referOrder);
 
+// Feature 17: Monthly Fuel Production Analytics
+router.get('/production',       guard, RefineryController.showProduction);
+router.post('/production/log',  guard, RefineryController.logProduction);
+
 module.exports = router;

@@ -1,7 +1,7 @@
 <%
 /**
  * views/partials/sidebar.ejs
- * Role-based navigation — Module 1 + Module 2 + Module 3
+ * Role-based navigation — Module 1 + 2 + 3 + 4 (Complete)
  */
 const role = user ? user.role : null;
 const path = locals.currentPath || '';
@@ -28,80 +28,61 @@ const path = locals.currentPath || '';
 
     <!-- Public — F1, F2 -->
     <span class="nav-section-label">Public</span>
-    <a href="/home" class="nav-item <%= path === '/home' ? 'active' : '' %>">
-      <span class="nav-icon">🗺️</span> Find Stations
-    </a>
-    <a href="/inventory" class="nav-item <%= path === '/inventory' ? 'active' : '' %>">
-      <span class="nav-icon">📊</span> Fuel Inventory
-    </a>
+    <a href="/home"      class="nav-item <%= path === '/home'      ? 'active' : '' %>"><span class="nav-icon">🗺️</span> Find Stations</a>
+    <a href="/inventory" class="nav-item <%= path === '/inventory' ? 'active' : '' %>"><span class="nav-icon">📊</span> Fuel Inventory</a>
 
-    <!-- Customer — M1:F5, M2:F6, M3:F11, M3:F12 -->
+    <!-- Customer — M4:F3, M1:F5, M2:F6, M3:F11, M3:F12 -->
     <% if (role === 'customer') { %>
     <hr class="divider">
     <span class="nav-section-label">Customer</span>
+    <a href="/customer/dashboard" class="nav-item <%= path.startsWith('/customer/dashboard') ? 'active' : '' %>">
+      <span class="nav-icon">📈</span> Analytics Dashboard <small style="opacity:.5;font-size:10px;">F3</small>
+    </a>
     <a href="/customer/wallet" class="nav-item <%= path.startsWith('/customer/wallet') ? 'active' : '' %>">
-      <span class="nav-icon">💳</span> Digital Wallet <small style="opacity:.55;font-size:10px;">F5</small>
+      <span class="nav-icon">💳</span> Digital Wallet <small style="opacity:.5;font-size:10px;">F5</small>
     </a>
     <a href="/customer/payment" class="nav-item <%= path.startsWith('/customer/payment') ? 'active' : '' %>">
-      <span class="nav-icon">⛽</span> Buy Fuel <small style="opacity:.55;font-size:10px;">F6</small>
+      <span class="nav-icon">⛽</span> Buy Fuel <small style="opacity:.5;font-size:10px;">F6</small>
     </a>
     <a href="/customer/loyalty" class="nav-item <%= path.startsWith('/customer/loyalty') ? 'active' : '' %>">
-      <span class="nav-icon">🏆</span> Loyalty Points <small style="opacity:.55;font-size:10px;">F11</small>
+      <span class="nav-icon">🏆</span> Loyalty Points <small style="opacity:.5;font-size:10px;">F11</small>
     </a>
     <a href="/customer/feedback" class="nav-item <%= path.startsWith('/customer/feedback') ? 'active' : '' %>">
-      <span class="nav-icon">💬</span> Submit Review <small style="opacity:.55;font-size:10px;">F12</small>
+      <span class="nav-icon">💬</span> Submit Review <small style="opacity:.5;font-size:10px;">F12</small>
     </a>
     <% } %>
 
-    <!-- Pump Owner — M1:F13, M2:F7,F9, M3:F12 -->
+    <!-- Pump Owner — M1:F13, M2:F7,F9, M3:F12, M4:F12 -->
     <% if (role === 'pump_owner') { %>
     <hr class="divider">
     <span class="nav-section-label">Pump Owner</span>
-    <a href="/pump/dashboard" class="nav-item <%= path === '/pump/dashboard' ? 'active' : '' %>">
-      <span class="nav-icon">🏪</span> Dashboard
-    </a>
-    <a href="/pump/uptime" class="nav-item <%= path.startsWith('/pump/uptime') ? 'active' : '' %>">
-      <span class="nav-icon">🔄</span> Maintenance Mode <small style="opacity:.55;font-size:10px;">F13</small>
-    </a>
-    <a href="/pump/procurement" class="nav-item <%= path.startsWith('/pump/procurement') ? 'active' : '' %>">
-      <span class="nav-icon">📦</span> Procurement Portal <small style="opacity:.55;font-size:10px;">F9</small>
-    </a>
-    <a href="/pump/pricing" class="nav-item <%= path.startsWith('/pump/pricing') ? 'active' : '' %>">
-      <span class="nav-icon">💰</span> Dynamic Pricing <small style="opacity:.55;font-size:10px;">F7</small>
-    </a>
-    <a href="/pump/feedback" class="nav-item <%= path.startsWith('/pump/feedback') ? 'active' : '' %>">
-      <span class="nav-icon">💬</span> Submit Review <small style="opacity:.55;font-size:10px;">F12</small>
-    </a>
+    <a href="/pump/dashboard"    class="nav-item <%= path === '/pump/dashboard'                  ? 'active' : '' %>"><span class="nav-icon">🏪</span> Dashboard</a>
+    <a href="/pump/uptime"       class="nav-item <%= path.startsWith('/pump/uptime')             ? 'active' : '' %>"><span class="nav-icon">🔄</span> Maintenance Mode <small style="opacity:.5;font-size:10px;">F13</small></a>
+    <a href="/pump/procurement"  class="nav-item <%= path.startsWith('/pump/procurement')        ? 'active' : '' %>"><span class="nav-icon">📦</span> Procurement Portal <small style="opacity:.5;font-size:10px;">F9</small></a>
+    <a href="/pump/pricing"      class="nav-item <%= path.startsWith('/pump/pricing')            ? 'active' : '' %>"><span class="nav-icon">💰</span> Dynamic Pricing <small style="opacity:.5;font-size:10px;">F7</small></a>
+    <a href="/pump/discrepancy"  class="nav-item <%= path.startsWith('/pump/discrepancy')        ? 'active' : '' %>"><span class="nav-icon">🔍</span> Discrepancy Analysis <small style="opacity:.5;font-size:10px;">F12</small></a>
+    <a href="/pump/feedback"     class="nav-item <%= path.startsWith('/pump/feedback')           ? 'active' : '' %>"><span class="nav-icon">💬</span> Submit Review <small style="opacity:.5;font-size:10px;">F12</small></a>
     <% } %>
 
-    <!-- Refinery Owner — M2:F8,F10 -->
+    <!-- Refinery Owner — M2:F8,F10, F17 -->
     <% if (role === 'refinery_owner') { %>
     <hr class="divider">
     <span class="nav-section-label">Refinery Owner</span>
-    <a href="/refinery/dashboard" class="nav-item <%= path === '/refinery/dashboard' ? 'active' : '' %>">
-      <span class="nav-icon">🏭</span> Refinery Dashboard
-    </a>
-    <a href="/refinery/orders" class="nav-item <%= path.startsWith('/refinery/orders') ? 'active' : '' %>">
-      <span class="nav-icon">📋</span> Supply Orders <small style="opacity:.55;font-size:10px;">F8·F10</small>
-    </a>
+    <a href="/refinery/dashboard"  class="nav-item <%= path === '/refinery/dashboard'           ? 'active' : '' %>"><span class="nav-icon">🏭</span> Refinery Dashboard</a>
+    <a href="/refinery/orders"     class="nav-item <%= path.startsWith('/refinery/orders')      ? 'active' : '' %>"><span class="nav-icon">📋</span> Supply Orders <small style="opacity:.5;font-size:10px;">F8·F10</small></a>
+    <a href="/refinery/production" class="nav-item <%= path.startsWith('/refinery/production')  ? 'active' : '' %>"><span class="nav-icon">📈</span> Production Analytics <small style="opacity:.5;font-size:10px;">F17</small></a>
     <% } %>
 
-    <!-- Superadmin — M1:F17, M3:F13,F14,F15 -->
+    <!-- Superadmin — M4:F15,F16, M1:F17, M3:F13,F14,F15 -->
     <% if (role === 'superadmin') { %>
     <hr class="divider">
     <span class="nav-section-label">Superadmin</span>
-    <a href="/admin/ledger" class="nav-item <%= path.startsWith('/admin/ledger') ? 'active' : '' %>">
-      <span class="nav-icon">📒</span> Transaction Ledger <small style="opacity:.55;font-size:10px;">F17</small>
-    </a>
-    <a href="/admin/reviews" class="nav-item <%= path.startsWith('/admin/reviews') ? 'active' : '' %>">
-      <span class="nav-icon">⚖️</span> Review Triage <small style="opacity:.55;font-size:10px;">F13</small>
-    </a>
-    <a href="/admin/uptime-scores" class="nav-item <%= path.startsWith('/admin/uptime-scores') ? 'active' : '' %>">
-      <span class="nav-icon">📈</span> Uptime Scores <small style="opacity:.55;font-size:10px;">F14</small>
-    </a>
-    <a href="/admin/compliance" class="nav-item <%= path.startsWith('/admin/compliance') ? 'active' : '' %>">
-      <span class="nav-icon">🎫</span> Investigation Orders <small style="opacity:.55;font-size:10px;">F15</small>
-    </a>
+    <a href="/admin/console"       class="nav-item <%= path.startsWith('/admin/console')        ? 'active' : '' %>"><span class="nav-icon">🖥️</span> Oversight Console <small style="opacity:.5;font-size:10px;">F15</small></a>
+    <a href="/admin/demographics"  class="nav-item <%= path.startsWith('/admin/demographics')   ? 'active' : '' %>"><span class="nav-icon">🔬</span> Demographics <small style="opacity:.5;font-size:10px;">F16</small></a>
+    <a href="/admin/ledger"        class="nav-item <%= path.startsWith('/admin/ledger')         ? 'active' : '' %>"><span class="nav-icon">📒</span> Transaction Ledger <small style="opacity:.5;font-size:10px;">F17</small></a>
+    <a href="/admin/reviews"       class="nav-item <%= path.startsWith('/admin/reviews')        ? 'active' : '' %>"><span class="nav-icon">⚖️</span> Review Triage <small style="opacity:.5;font-size:10px;">F13</small></a>
+    <a href="/admin/uptime-scores" class="nav-item <%= path.startsWith('/admin/uptime-scores')  ? 'active' : '' %>"><span class="nav-icon">📈</span> Uptime Scores <small style="opacity:.5;font-size:10px;">F14</small></a>
+    <a href="/admin/compliance"    class="nav-item <%= path.startsWith('/admin/compliance')     ? 'active' : '' %>"><span class="nav-icon">🎫</span> Investigation Orders <small style="opacity:.5;font-size:10px;">F15</small></a>
     <% } %>
 
   </nav>

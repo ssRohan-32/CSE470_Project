@@ -4,15 +4,17 @@
  * Module 2: Feature 7  — Dynamic Pricing & Tax Engine [Strategy Pattern]
  *           Feature 9  — Automated Procurement Portal
  * Module 3: Feature 12 — Anonymous Review Submission [Observer Pattern]
+ * Module 4: Feature 12 — Automated Discrepancy Algorithm [High Cyclomatic Complexity]
  */
 
-const OrderModel      = require('../models/OrderModel');
+const OrderModel        = require('../models/OrderModel');
 const { PricingContext } = require('../services/PricingStrategy');
-const PricingModel    = require('../models/PricingModel');
-const LedgerManager   = require('../services/LedgerSingleton');
-const ReviewModel     = require('../models/ReviewModel');
+const PricingModel      = require('../models/PricingModel');
+const LedgerManager     = require('../services/LedgerSingleton');
+const ReviewModel       = require('../models/ReviewModel');
+const DiscrepancyService = require('../services/DiscrepancyService');
 const { feedbackSubject } = require('../services/ObserverService');
-const { getDb }       = require('../config/database');
+const { getDb }         = require('../config/database');
 
 class PumpController {
 
@@ -213,6 +215,45 @@ class PumpController {
 
     req.flash('success', `Anonymous review submitted (B2B). Priority: ${result.priority}`);
     res.redirect('/pump/feedback');
+  }
+
+  // ─── Feature 12 (M4): Automated Discrepancy Algorithm ──────────────────────
+
+  static showDiscrepancy(req, res) {
+    const pump = PumpController.getPump(req.session.user.id);
+    const days = parseInt(req.query.days) || 30;
+
+    if (!pump) {
+      req.flash('error', 'No pump found.');
+      return res.redirect('/pump/dashboard');
+    }
+
+    const analysis = DiscrepancyService.analyzeDiscrepancies(pump.id, days);
+
+    res.render('pump/discrepancy', {
+      title: 'Discrepancy Analysis — NAFAS',
+      pump, analysis, days,
+      user: req.session.user
+    });
+  }
+
+  static addDeliveryLog(req, res) {
+    const pump = PumpController.getPump(req.session.user.id);
+    const { fuel_type, invoiced_quantity, recorded_sales, log_date } = req.body;
+
+    try {
+      DiscrepancyService.logDelivery({
+        pump_id:           pump.id,
+        fuel_type,
+        invoiced_quantity: parseFloat(invoiced_quantity),
+        recorded_sales:    parseFloat(recorded_sales),
+        log_date
+      });
+      req.flash('success', 'Delivery log added. Discrepancy analysis updated.');
+    } catch (err) {
+      req.flash('error', err.message);
+    }
+    res.redirect('/pump/discrepancy');
   }
 }
 

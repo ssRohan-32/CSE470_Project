@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/console' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🖥️ System-Wide Oversight Console</h1>
+        <p class="page-subtitle">Feature 15 — Real-time metrics across all active entities (Module 4)</p>
+      </div>
+      <span class="badge badge-danger">🔴 Superadmin</span>
+    </div>
+
+    <!-- System Stats -->
+    <div class="stat-grid mb-24">
+      <% const roleMap = { customer:'👤', pump_owner:'🏪', refinery_owner:'🏭', superadmin:'🔑' }; %>
+      <% roleCounts.forEach(r => { %>
+      <div class="stat-card">
+        <div class="stat-icon"><%= roleMap[r.role] || '👤' %></div>
+        <div class="stat-value"><%= r.count %></div>
+        <div class="stat-label"><%= r.role.replace('_',' ') %>s</div>
+      </div>
+      <% }) %>
+      <div class="stat-card success">
+        <div class="stat-icon">⛽</div>
+        <div class="stat-value"><%= pumpsData.active %></div>
+        <div class="stat-label">Active Stations</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-value"><%= pumpsData.maintenance %></div>
+        <div class="stat-label">In Maintenance</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value">৳<%= systemStats.total_revenue ? (systemStats.total_revenue/1000).toFixed(1) + 'k' : '0' %></div>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-value"><%= complianceAlerts.length %></div>
+        <div class="stat-label">Open Alerts</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">📊 Revenue Trend (12 Months)</h3></div>
+        <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">⛽ Fuel Sales Breakdown</h3></div>
+        <div class="chart-container"><canvas id="fuelChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Open Compliance Alerts -->
+    <% if (complianceAlerts.length) { %>
+    <div class="card mb-24">
+      <div class="card-header">
+        <h3 class="card-title">🚨 Open Investigation Orders</h3>
+        <a href="/admin/compliance" class="btn btn-danger btn-sm">View All</a>
+      </div>
+      <% complianceAlerts.slice(0,3).forEach(a => { %>
+      <div class="alert mb-8" style="border-color:var(--accent-danger); background:rgba(255,77,77,.08); margin-bottom:8px;">
+        <span>🎫</span>
+        <div>
+          <strong>[<%= a.severity %>]</strong> <%= a.entity_type.toUpperCase() %> — <%= a.entity_name %><br>
+          <span class="text-sm text-muted"><%= a.reason %></span>
+        </div>
+        <a href="/admin/compliance" class="btn btn-danger btn-sm" style="margin-left:auto;">Review</a>
+      </div>
+      <% }) %>
+    </div>
+    <% } %>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">🧾 Recent System Transactions</h3>
+        <a href="/admin/ledger" class="btn btn-ghost btn-sm">View Ledger</a>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Date</th><th>Customer</th><th>Station</th><th>Fuel</th><th>Qty</th><th>Amount</th><th>Method</th></tr></thead>
+          <tbody>
+            <% if (!recentTxs.length) { %>
+            <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-muted);">No transactions yet.</td></tr>
+            <% } %>
+            <% recentTxs.forEach(t => { %>
+            <tr>
+              <td class="text-sm text-muted"><%= new Date(t.created_at).toLocaleDateString() %></td>
+              <td><%= t.customer_name %></td>
+              <td><%= t.pump_name %></td>
+              <td class="fuel-<%= t.fuel_type.toLowerCase() %>"><%= t.fuel_type %></td>
+              <td><%= t.quantity.toFixed(0) %>L</td>
+              <td class="font-bold text-success">৳<%= t.total_amount.toFixed(2) %></td>
+              <td><span class="badge badge-info"><%= t.payment_method %></span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="/js/charts.js"></script>
+<script>
+  const revData  = <%- revenueTrend %>;
+  const fuelData = <%- fuelBreakdown %>;
+  if (typeof renderRevenueTrend === 'function') renderRevenueTrend('revenueChart', revData);
+  else {
+    const rev = typeof revData === 'string' ? JSON.parse(revData) : revData;
+    if (rev && rev.length) new Chart(document.getElementById('revenueChart'), {
+      type: 'line',
+      data: { labels: rev.map(r => r.month), datasets: [{ label: 'Revenue', data: rev.map(r => r.revenue || 0), borderColor: '#6c63ff', backgroundColor: '#6c63ff22', fill: true, tension: 0.4, pointRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(255,255,255,0.03)' } } } }
+    });
+  }
+
+  const fuelArr = typeof fuelData === 'string' ? JSON.parse(fuelData) : fuelData;
+  if (fuelArr && fuelArr.length) new Chart(document.getElementById('fuelChart'), {
+    type: 'doughnut',
+    data: { labels: fuelArr.map(f => f.fuel_type), datasets: [{ data: fuelArr.map(f => f.total_qty), backgroundColor: ['#ff9f43','#a29bfe','#00e5a0','#00d4ff'], borderColor: '#10141f', borderWidth: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { padding: 16, usePointStyle: true } } } }
+  });
+</script>
+</body>
+</html>

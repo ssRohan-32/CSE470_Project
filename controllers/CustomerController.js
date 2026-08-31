@@ -4,6 +4,7 @@
  * Module 2: Feature 6  — Payment Gateway [Adapter Pattern]
  * Module 3: Feature 11 — Gamified Loyalty Points Engine
  *           Feature 12 — Anonymous Feedback / Observer Pattern
+ * Module 4: Feature 3  — Consumption & Expense Analytics Dashboard
  */
 
 const WalletModel      = require('../models/WalletModel');
@@ -18,6 +19,25 @@ const LedgerManager    = require('../services/LedgerSingleton');
 const { getDb }        = require('../config/database');
 
 class CustomerController {
+
+  // ─── Feature 3: Consumption & Expense Analytics Dashboard ──────────────────
+
+  static showDashboard(req, res) {
+    const userId       = req.session.user.id;
+    const transactions = TransactionModel.getByCustomer(userId);
+    const trend        = TransactionModel.getSpendingTrend(userId, 30);
+    const wallet       = WalletModel.getByUserId(userId) || { balance: 0 };
+    const loyalty      = LoyaltyModel.getByUserId(userId);
+    const tier         = LoyaltyModel.getTier(loyalty.points);
+
+    res.render('customer/dashboard', {
+      title: 'My Dashboard — NAFAS',
+      transactions: transactions.slice(0, 15),
+      trend:  JSON.stringify(trend),
+      wallet, loyalty, tier,
+      user: req.session.user
+    });
+  }
 
   // ─── Feature 5: Digital Wallet ─────────────────────────────────────────────
 

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/pump/discrepancy' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🔍 Discrepancy Algorithm</h1>
+        <p class="page-subtitle">Feature 12 — Automated Discrepancy Detection (High Cyclomatic Complexity · Module 4)</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <% [7,14,30].forEach(d => { %>
+        <a href="/pump/discrepancy?days=<%= d %>" class="btn <%= days==d ? 'btn-primary' : 'btn-ghost' %> btn-sm"><%= d %>d</a>
+        <% }) %>
+      </div>
+    </div>
+
+    <% if (analysis.summary) { %>
+    <!-- Summary Stats -->
+    <div class="stat-grid mb-24">
+      <div class="stat-card">
+        <div class="stat-icon">📥</div>
+        <div class="stat-value"><%= (analysis.summary.totalInvoiced/1000).toFixed(1) %>k</div>
+        <div class="stat-label">Invoiced (L)</div>
+      </div>
+      <div class="stat-card success">
+        <div class="stat-icon">💸</div>
+        <div class="stat-value"><%= (analysis.summary.totalSales/1000).toFixed(1) %>k</div>
+        <div class="stat-label">Recorded Sales (L)</div>
+      </div>
+      <div class="stat-card <%= analysis.summary.totalDiscrepancyPct > 10 ? 'danger' : analysis.summary.totalDiscrepancyPct > 5 ? 'warning' : '' %>">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value"><%= analysis.summary.totalDiscrepancyPct %>%</div>
+        <div class="stat-label">Aggregate Loss Rate</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-value"><%= analysis.summary.criticalCount %></div>
+        <div class="stat-label">Critical Events</div>
+      </div>
+    </div>
+
+    <!-- System Alerts -->
+    <% analysis.alerts.forEach(alert => { %>
+    <div class="alert alert-<%= alert.type==='CRITICAL'?'critical':alert.type==='PATTERN'?'warning':'info' %> mb-16">
+      <span><%= alert.type==='CRITICAL' ? '🚨' : alert.type==='PATTERN' ? '🔄' : '📊' %></span>
+      <div><strong>[<%= alert.type %>]</strong> <%= alert.message %></div>
+    </div>
+    <% }) %>
+
+    <!-- Cyclomatic Complexity Info -->
+    <div class="alert alert-info mb-24">
+      <span>🧠</span>
+      <div class="text-sm">
+        <strong>Cyclomatic Complexity: ~12</strong> — 5 severity branches (ANOMALY / CRITICAL / WARNING / CAUTION / OK)
+        + 3 system-level alert conditions (aggregate, pattern, critical count threshold).
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card mb-24">
+      <div class="card-header"><h3 class="card-title">📈 Invoiced vs Recorded Sales — Last <%= days %> Days</h3></div>
+      <div class="chart-container" style="height:280px;"><canvas id="discrepancyChart"></canvas></div>
+    </div>
+
+    <!-- Log Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">📋 Daily Log Analysis (<%= analysis.logs.length %> entries)</h3>
+        <button onclick="document.getElementById('log-modal').style.display='flex'" class="btn btn-primary btn-sm">+ Add Log</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Fuel</th><th>Invoiced</th><th>Recorded</th><th>Discrepancy</th><th>Loss %</th><th>Severity</th><th>Recommendation</th></tr>
+          </thead>
+          <tbody>
+            <% analysis.logs.forEach(log => { %>
+            <tr>
+              <td class="text-sm text-muted"><%= log.log_date %></td>
+              <td class="fuel-<%= log.fuel_type.toLowerCase() %>"><%= log.fuel_type %></td>
+              <td><%= log.invoiced_quantity.toFixed(0) %>L</td>
+              <td><%= log.recorded_sales.toFixed(0) %>L</td>
+              <td class="<%= log.discrepancy > 100 ? 'text-danger font-bold' : 'text-warning' %>"><%= log.discrepancy.toFixed(0) %>L</td>
+              <td><%= log.discrepancyPct %>%</td>
+              <td>
+                <span class="badge badge-<%= log.severity==='CRITICAL'?'danger':log.severity==='WARNING'?'warning':log.severity==='ANOMALY'?'danger':log.severity==='CAUTION'?'info':'success' %>">
+                  <%= log.severity %>
+                </span>
+              </td>
+              <td class="text-sm text-muted" style="max-width:220px;"><%= log.recommendation || '—' %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <% } else { %>
+    <div class="empty-state">
+      <div class="emoji">📊</div>
+      <h3>No delivery logs yet</h3>
+      <p>Add your first delivery log to start the automated discrepancy analysis.</p>
+      <button onclick="document.getElementById('log-modal').style.display='flex'" class="btn btn-primary mt-16">+ Add First Log</button>
+    </div>
+    <% } %>
+
+    <!-- Add Log Modal -->
+    <div id="log-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:200; align-items:center; justify-content:center;">
+      <div class="card" style="max-width:440px; width:90%;">
+        <div class="card-header">
+          <h3 class="card-title">📥 Add Delivery Log</h3>
+          <button onclick="document.getElementById('log-modal').style.display='none'" class="btn btn-ghost btn-sm">✕</button>
+        </div>
+        <form action="/pump/discrepancy/log" method="POST">
+          <div class="form-group">
+            <label class="form-label">Fuel Type</label>
+            <select name="fuel_type" class="form-control" required>
+              <option>Octane</option><option>Diesel</option><option>Petrol</option><option>EV</option>
+            </select>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Invoiced Qty (L)</label>
+              <input type="number" name="invoiced_quantity" class="form-control" min="1" step="0.1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Recorded Sales (L)</label>
+              <input type="number" name="recorded_sales" class="form-control" min="0" step="0.1" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" name="log_date" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
+          </div>
+          <button type="submit" class="btn btn-primary w-full" style="justify-content:center;">Submit Log Entry</button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="/js/charts.js"></script>
+<script>
+  const logs = <%- JSON.stringify(analysis.logs || []) %>;
+  if (typeof renderDiscrepancyChart === 'function') renderDiscrepancyChart('discrepancyChart', logs);
+  else if (logs.length) {
+    const ctx = document.getElementById('discrepancyChart');
+    if (ctx) new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: logs.map(l => l.log_date).reverse(),
+        datasets: [
+          { label: 'Invoiced (L)', data: logs.map(l => l.invoiced_quantity).reverse(), backgroundColor: '#6c63ff88', borderRadius: 4 },
+          { label: 'Recorded Sales (L)', data: logs.map(l => l.recorded_sales).reverse(), backgroundColor: '#00e5a088', borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { usePointStyle: true } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(255,255,255,0.03)' } } } }
+    });
+  }
+</script>
+</body>
+</html>

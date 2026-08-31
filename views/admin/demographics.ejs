@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { currentPath: '/admin/demographics' }) %>
+  <main class="main-content animate-fade">
+    <%- include('../partials/flash') %>
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">🔬 Market Demographics Engine</h1>
+        <p class="page-subtitle">Feature 16 — Cross-Reference Research: Car Brand × Age Range × Fuel Type (Module 4)</p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">🚗 Purchases by Car Brand</h3></div>
+        <div class="chart-container"><canvas id="carChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">👥 Purchases by Age Range</h3></div>
+        <div class="chart-container"><canvas id="ageChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Car Brand × Fuel Type Matrix -->
+    <div class="card mb-24">
+      <div class="card-header"><h3 class="card-title">🔗 Car Brand × Fuel Type Matrix</h3></div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Car Brand</th>
+              <th class="fuel-octane">🔶 Octane</th>
+              <th class="fuel-diesel">⚫ Diesel</th>
+              <th class="fuel-petrol">🟢 Petrol</th>
+              <th class="fuel-ev">⚡ EV</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!Object.keys(carFuelMatrix).length) { %>
+            <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted);">No demographic data yet. Customers need car_brand in their profile.</td></tr>
+            <% } %>
+            <% Object.entries(carFuelMatrix).forEach(([car, fuels]) => {
+              const total = Object.values(fuels).reduce((s,v) => s+v, 0);
+            %>
+            <tr>
+              <td class="font-bold">🚗 <%= car %></td>
+              <td><%= fuels['Octane'] || '—' %></td>
+              <td><%= fuels['Diesel'] || '—' %></td>
+              <td><%= fuels['Petrol'] || '—' %></td>
+              <td><%= fuels['EV']     || '—' %></td>
+              <td class="font-bold text-accent"><%= total %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Raw Research Dataset -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">📊 Research Dataset</h3>
+        <span class="badge badge-muted"><%= data.slice(0,20).length %> rows</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Car Brand</th><th>Age Range</th><th>Preferred Fuel</th><th>Purchases</th><th>Avg Qty (L)</th><th>Total Spent</th></tr>
+          </thead>
+          <tbody>
+            <% if (!data.length) { %>
+            <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted);">No data available yet.</td></tr>
+            <% } %>
+            <% data.slice(0,20).forEach(row => { %>
+            <tr>
+              <td><%= row.car_brand || '—' %></td>
+              <td><%= row.age_range || '—' %></td>
+              <td class="fuel-<%= row.fuel_type.toLowerCase() %> font-semibold"><%= row.fuel_type %></td>
+              <td class="font-bold"><%= row.purchase_count %></td>
+              <td><%= row.avg_quantity.toFixed(1) %>L</td>
+              <td class="text-success font-semibold">৳<%= row.total_spent.toFixed(2) %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="/js/charts.js"></script>
+<script>
+  const carMatrix = <%- carFuelMatrixJson %>;
+  const ageMatrix = <%- ageFuelMatrixJson %>;
+
+  const carLabels = Object.keys(carMatrix);
+  if (carLabels.length) {
+    new Chart(document.getElementById('carChart'), {
+      type: 'polarArea',
+      data: {
+        labels: carLabels,
+        datasets: [{ data: carLabels.map(l => Object.values(carMatrix[l]).reduce((s,v)=>s+v,0)), backgroundColor: ['#6c63ffAA','#00d4ffAA','#00e5a0AA','#ffd166AA','#ff6b6bAA'], borderColor: '#10141f', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+    });
+  }
+
+  const ageLabels = Object.keys(ageMatrix);
+  if (ageLabels.length) {
+    new Chart(document.getElementById('ageChart'), {
+      type: 'bar',
+      data: {
+        labels: ageLabels,
+        datasets: ['Octane','Diesel','Petrol','EV'].map((fuel, i) => ({
+          label: fuel,
+          data: ageLabels.map(a => ageMatrix[a][fuel] || 0),
+          backgroundColor: ['#ff9f43BB','#a29bfeBB','#00e5a0BB','#00d4ffBB'][i],
+          borderRadius: 4
+        }))
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { usePointStyle: true } } },
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: 'rgba(255,255,255,0.03)' } } }
+      }
+    });
+  }
+</script>
+</body>
+</html>

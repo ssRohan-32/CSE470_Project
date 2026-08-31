@@ -86,11 +86,12 @@ app.use((err, req, res, next) => {
 
 // ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🔥 NAFAS — Module 1 + Module 2 + Module 3`);
+  console.log(`\n🔥 NAFAS — Modules 1 · 2 · 3 · 4  (Complete)`);
   console.log(`   Running at http://localhost:${PORT}`);
   console.log(`   Environment: development`);
   console.log(`\n   ✅ Feature  1 — Pump Routing & Filtering`);
   console.log(`   ✅ Feature  2 — Real-Time Fuel Inventory`);
+  console.log(`   ✅ Feature  3 — Consumption & Expense Analytics`);
   console.log(`   ✅ Feature  5 — Digital Wallet`);
   console.log(`   ✅ Feature  6 — Payment Gateway [Adapter]`);
   console.log(`   ✅ Feature  7 — Dynamic Pricing [Strategy]`);
@@ -99,10 +100,14 @@ app.listen(PORT, () => {
   console.log(`   ✅ Feature 10 — Inter-Refinery Referral`);
   console.log(`   ✅ Feature 11 — Loyalty Points Engine`);
   console.log(`   ✅ Feature 12 — Anonymous Reviews [Observer]`);
+  console.log(`   ✅ Feature 12 — Discrepancy Algorithm [High CC]`);
   console.log(`   ✅ Feature 13 — Review Triage & Priority Engine`);
   console.log(`   ✅ Feature 14 — Trust Score Accumulation [Cron]`);
+  console.log(`   ✅ Feature 15 — System-Wide Oversight Console`);
   console.log(`   ✅ Feature 15 — Auto Investigation Orders`);
-  console.log(`   ✅ Feature 17 — Transaction Ledger [Singleton]\n`);
+  console.log(`   ✅ Feature 16 — Market Demographics Engine`);
+  console.log(`   ✅ Feature 17 — Transaction Ledger [Singleton]`);
+  console.log(`   ✅ Feature 17 — Refinery Production Analytics\n`);
 
   // Start daily compliance cron (F14 + F15)
   ComplianceCron.start();

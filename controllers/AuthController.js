@@ -67,10 +67,10 @@ class AuthController {
 
   static getDashboardUrl(role) {
     const map = {
-      customer:        '/customer/wallet',
+      customer:        '/customer/dashboard',
       pump_owner:      '/pump/dashboard',
       refinery_owner:  '/refinery/dashboard',
-      superadmin:      '/admin/ledger',
+      superadmin:      '/admin/console',
     };
     return map[role] || '/home';
   }

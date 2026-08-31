@@ -213,6 +213,17 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (pump_id) REFERENCES pumps(id)
     );
+
+    CREATE TABLE IF NOT EXISTS production_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      refinery_id INTEGER NOT NULL,
+      fuel_type TEXT NOT NULL CHECK(fuel_type IN ('Octane','Diesel','Petrol','EV')),
+      volume_litres REAL NOT NULL,
+      production_month TEXT NOT NULL,
+      notes TEXT,
+      logged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (refinery_id) REFERENCES refineries(id)
+    );
   `);
 
   // ─── Seed Data ────────────────────────────────────────────────────────────

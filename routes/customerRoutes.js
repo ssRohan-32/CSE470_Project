@@ -4,6 +4,7 @@
  * Module 2: Feature 6  — Payment Gateway
  * Module 3: Feature 11 — Loyalty Points Engine
  *           Feature 12 — Anonymous Feedback [Observer]
+ * Module 4: Feature 3  — Consumption & Expense Analytics
  */
 const express    = require('express');
 const router     = express.Router();
@@ -12,19 +13,22 @@ const { requireRole }    = require('../middleware/authMiddleware');
 
 const guard = requireRole('customer');
 
-// Feature 5: Wallet
+// Feature 3 (M4): Analytics Dashboard
+router.get('/dashboard', guard, CustomerController.showDashboard);
+
+// Feature 5 (M1): Wallet
 router.get('/wallet',          guard, CustomerController.showWallet);
 router.post('/wallet/deposit', guard, CustomerController.depositWallet);
 
-// Feature 6: Payment Gateway [Adapter Pattern]
+// Feature 6 (M2): Payment Gateway [Adapter Pattern]
 router.get('/payment',  guard, CustomerController.showPayment);
 router.post('/payment', guard, CustomerController.processPayment);
 
-// Feature 11: Loyalty Points
-router.get('/loyalty',          guard, CustomerController.showLoyalty);
-router.post('/loyalty/redeem',  guard, CustomerController.redeemReward);
+// Feature 11 (M3): Loyalty Points
+router.get('/loyalty',         guard, CustomerController.showLoyalty);
+router.post('/loyalty/redeem', guard, CustomerController.redeemReward);
 
-// Feature 12: Anonymous Feedback [Observer Pattern]
+// Feature 12 (M3): Anonymous Feedback [Observer Pattern]
 router.get('/feedback',  guard, CustomerController.showFeedback);
 router.post('/feedback', guard, CustomerController.submitFeedback);
 
